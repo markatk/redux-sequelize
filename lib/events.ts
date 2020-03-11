@@ -30,10 +30,8 @@ import { Entity } from './entity';
 
 export const UPDATING_ENTITIES = 'RS_UPDATING_ENTITIES';
 export const UPDATING_ENTITIES_FAILED = 'RS_UPDATING_ENTITIES_FAILED';
-export const CREATE_ENTITY = 'RS_CREATE_ENTITY';
-export const GET_ENTITY = 'RS_GET_ENTITY';
-export const GET_ENTITIES = 'RS_GET_ENTITIES';
 export const SET_ENTITY = 'RS_SET_ENTITY';
+export const SET_ENTITIES = 'RS_SET_ENTITIES';
 export const DELETE_ENTITY = 'RS_DELETE_ENTITY';
 
 interface UpdatingEntitiesAction {
@@ -50,28 +48,16 @@ interface UpdatingEntitiesFailedAction {
     error?: any;
 }
 
-interface CreateEntityAction<T extends Entity> {
-    type: typeof CREATE_ENTITY;
-    table: string;
-    entity: T;
-}
-
-interface GetEntityAction<T extends Entity> {
-    type: typeof GET_ENTITY;
-    table: string;
-    entity: T;
-}
-
-interface GetAllEntitiesAction<T extends Entity> {
-    type: typeof GET_ENTITIES;
-    table: string;
-    entities: T[];
-}
-
 interface SetEntityAction<T extends Entity> {
     type: typeof SET_ENTITY;
     table: string;
     entity: T;
+}
+
+interface SetEntitiesAction<T extends Entity> {
+    type: typeof SET_ENTITIES;
+    table: string;
+    entities: T[];
 }
 
 interface DeleteEntityAction {
@@ -80,5 +66,5 @@ interface DeleteEntityAction {
     key: number;
 }
 
-export type EntityActions<T extends Entity> = UpdatingEntitiesAction | UpdatingEntitiesFailedAction | CreateEntityAction<T> | GetEntityAction<T> |
-    GetAllEntitiesAction<T> | SetEntityAction<T> | DeleteEntityAction;
+export type EntityActions<T extends Entity> = UpdatingEntitiesAction | UpdatingEntitiesFailedAction | SetEntityAction<T> | SetEntitiesAction<T> |
+    DeleteEntityAction;

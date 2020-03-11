@@ -1,5 +1,5 @@
 /*
- * File: reducers.test.ts
+ * File: helpers.ts
  * Author: MarkAtk
  * Date: 11.03.20
  *
@@ -26,35 +26,18 @@
  * SOFTWARE.
  */
 
-import { reducer, Events } from '../lib';
-import { Worker } from './entity';
+export function isRelatedEntity(value: object): boolean {
+    if (value instanceof Object === false) {
+        return false;
+    }
 
-const initialState = {
-    updating: 0,
-    data: {},
-    relatedTables: []
-};
+    return 'table' in value && 'key' in value && 'entity' in value;
+}
 
-const table = 'workers';
+export function isRelatedEntities(value: object): boolean {
+    if (value instanceof Object === false) {
+        return false;
+    }
 
-describe('entity reducer', () => {
-    it('create valid reducer', () => {
-        const workerReducer = reducer<Worker>(table);
-        expect(workerReducer).not.toBeNull();
-    });
-
-    it('handle unknown action', () => {
-        const workerReducer = reducer<Worker>(table);
-        expect(workerReducer(undefined, {} as Events.EntityActions<Worker>)).toEqual(initialState);
-        expect(workerReducer(undefined, { type: 'UNKNOWN' } as unknown as Events.EntityActions<Worker>)).toEqual(initialState);
-    });
-
-    it('updating increases', () => {
-        const workerReducer = reducer<Worker>(table);
-        expect(workerReducer(undefined, { type: Events.UPDATING_ENTITIES, table })).toEqual({
-            updating: 1,
-            data: {},
-            relatedTables: []
-        });
-    });
-});
+    return 'table' in value && 'entities' in value;
+}

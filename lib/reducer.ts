@@ -26,18 +26,30 @@
  * SOFTWARE.
  */
 
-import { UPDATING_ENTITIES, UPDATING_ENTITIES_FAILED, GET_ENTITY, GET_ENTITIES, SET_ENTITY, CREATE_ENTITY, DELETE_ENTITY, EntityActions } from './events';
+import _ from 'lodash';
+
+import { UPDATING_ENTITIES, UPDATING_ENTITIES_FAILED, SET_ENTITY, SET_ENTITIES, DELETE_ENTITY, EntityActions } from './events';
 import { Entity } from './entity';
+import { isRelatedEntities, isRelatedEntity } from './helpers';
+
+function getRelatedTables(currentTables: string[], entities: Entity[]): string[] {
+    return _.uniq(currentTables.concat(entities.map(entity => {
+        return Object.keys(entity)
+            .filter(key => isRelatedEntity(entity[key]) || isRelatedEntities(entity[key]))
+            .map(key => entity[key].table);
+        })
+        .flat()));
+}
 
 interface EntitiesState<T extends Entity> {
     updating: number;
-    data: Map<number, T>;
+    data: {[key: number]: T};
     relatedTables: string[];
 }
 
 const initialState = {
     updating: 0,
-    data: new Map(),
+    data: {},
     relatedTables: []
 };
 
@@ -48,6 +60,47 @@ export default function reducer<T extends Entity>(table: string) {
                 return {
                     ...state,
                     updating: state.updating + 1
+                };
+
+            case UPDATING_ENTITIES_FAILED:
+                // TODO: Handle error
+                return {
+                    ...state,
+                    updating: state.updating - 1
+                };
+
+            case SET_ENTITY:
+                return {
+                    ...state,
+                    updating: state.updating - 1,
+                    relatedTables: getRelatedTables(state.relatedTables, [action.entity]),
+                    data: {
+                        ...state.data,
+                        [action.entity.id]: action.entity
+                    }
+                };
+
+            case SET_ENTITIES:
+                const updatedData = action.entities.reduce((ent: {[key: number]: T}, entity) => {
+                    ent[entity.id] = entity;
+
+                    return ent;
+                }, { ...state.data });
+
+                return {
+                    ...state,
+                    updating: state.updating - 1,
+                    relatedTables: getRelatedTables(state.relatedTables, action.entities),
+                    data: updatedData
+                };
+
+            case DELETE_ENTITY:
+                const { [action.key]: removedEntity, ...data } = state.data;
+
+                return {
+                    ...state,
+                    updating: state.updating - 1,
+                    data,
                 };
 
             default:
