@@ -1,0 +1,44 @@
+{
+    "defaultSeverity": "error",
+    "extends": [
+      "tslint:latest"
+    ],
+    "jsRules": {
+    },
+    "rules": {
+      "no-implicit-dependencies": [true, "dev"],
+      "no-var-requires": false,
+      "quotemark": [true, "single"],
+      "no-console": false,
+      "object-literal-sort-keys": false,
+      "ordered-imports": false,
+      "trailing-comma": "never",
+      "max-line-length": [true, 160],
+      "radix": false,
+      "member-ordering": [true, { "order": [
+          "public-instance-field",
+          "protected-instance-field",
+          "private-instance-field",
+          "public-static-field",
+          "protected-static-field",
+          "private-static-field",
+          "public-constructor",
+          "protected-constructor",
+          "private-constructor",
+          "public-instance-method",
+          "protected-instance-method",
+          "private-instance-method",
+          "public-static-method",
+          "protected-static-method",
+          "private-static-method"
+        ]
+      }],
+      "arrow-parens": [true, "ban-single-arg-parens"],
+      "interface-name": false,
+      "no-submodule-imports": false,
+      "max-classes-per-file": false,
+      "no-empty": [true, "allow-empty-functions"],
+      "no-object-literal-type-assertion": false
+    },
+    "rulesDirectory": []
+  }

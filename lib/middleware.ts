@@ -1,5 +1,5 @@
 /*
- * File: index.ts
+ * File: middleware.ts
  * Author: MarkAtk
  * Date: 11.03.20
  *
@@ -26,8 +26,10 @@
  * SOFTWARE.
  */
 
-import { Entity } from './entity';
-import Middleware from './middleware';
-import Reducer from './reducer';
+import { Middleware } from 'redux';
 
-export { Middleware, Reducer, Entity };
+const middleware: Middleware = store => next => action => {
+    return next(action);
+};
+
+export default middleware;

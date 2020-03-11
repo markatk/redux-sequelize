@@ -1,16 +1,26 @@
 {
   "name": "redux-sequelize",
   "version": "0.0.1",
-  "description": "Redux middleware and reducer to work with sequelize databases",
+  "description": "Redux middleware, reducer and actions to work with sequelize databases",
   "main": "index.js",
   "repository": "https://github.com/markatk/redux-sequelize",
   "author": "Markus Grigull <web@grigull.net>",
   "license": "MIT",
-  "keywords": ["redux", "sequelize", "middleware", "reducer"],
+  "keywords": [
+    "redux",
+    "sequelize",
+    "middleware",
+    "reducer"
+  ],
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "lint": "tslint -c tslint.json -p tsconfig.json"
   },
   "devDependencies": {
+    "tslint": "^6.0.0",
     "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "redux": "^4.0.5"
   }
 }

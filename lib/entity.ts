@@ -1,5 +1,5 @@
 /*
- * File: index.ts
+ * File: entity.ts
  * Author: MarkAtk
  * Date: 11.03.20
  *
@@ -26,8 +26,7 @@
  * SOFTWARE.
  */
 
-import { Entity } from './entity';
-import Middleware from './middleware';
-import Reducer from './reducer';
-
-export { Middleware, Reducer, Entity };
+export interface Entity {
+    [key: string]: any;
+    id?: number;
+}

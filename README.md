@@ -4,7 +4,7 @@
 
 ## Description
 
-Redux middleware and reducer to work with sequelize databases.
+Redux middleware, reducer and actions to work with sequelize databases.
 
 ## License
 
