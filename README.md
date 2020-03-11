@@ -1,5 +1,6 @@
 # Redux Sequelize
 
+[![Build Status](https://travis-ci.org/markatk/redux-sequelize.svg?branch=master)](https://travis-ci.org/markatk/redux-sequelize)
 [![GitHub](https://img.shields.io/github/license/markatk/redux-sequelize)](https://github.com/markatk/redux-sequelize/blob/master/LICENSE)
 
 ## Description
