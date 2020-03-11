@@ -27,7 +27,8 @@
  */
 
 import { Entity } from './entity';
-import Middleware from './middleware';
-import Reducer from './reducer';
+import middleware from './middleware';
+import reducer from './reducer';
+import * as Events from './events';
 
-export { Middleware, Reducer, Entity };
+export { middleware, reducer, Entity, Events };

@@ -1,5 +1,5 @@
 /*
- * File: reducer.ts
+ * File: reducers.test.ts
  * Author: MarkAtk
  * Date: 11.03.20
  *
@@ -26,14 +26,8 @@
  * SOFTWARE.
  */
 
-import { UPDATING_ENTITIES, UPDATING_ENTITIES_FAILED, GET_ENTITY, GET_ENTITIES, SET_ENTITY, CREATE_ENTITY, DELETE_ENTITY, EntityActions } from './events';
-import { Entity } from './entity';
-
-interface EntitiesState<T extends Entity> {
-    updating: number;
-    data: Map<number, T>;
-    relatedTables: string[];
-}
+import { reducer, Events } from '../lib';
+import { Worker } from './entity';
 
 const initialState = {
     updating: 0,
@@ -41,17 +35,26 @@ const initialState = {
     relatedTables: []
 };
 
-export default function reducer<T extends Entity>(table: string) {
-    return (state: EntitiesState<T> = initialState, action: EntityActions<T>): EntitiesState<T> => {
-        switch (action.type) {
-            case UPDATING_ENTITIES:
-                return {
-                    ...state,
-                    updating: state.updating + 1
-                };
+const table = 'workers';
 
-            default:
-                return state;
-        }
-    };
-}
+describe('entity reducer', () => {
+    it('create valid reducer', () => {
+        const workerReducer = reducer<Worker>(table);
+        expect(workerReducer).not.toBeNull();
+    });
+
+    it('handle unknown action', () => {
+        const workerReducer = reducer<Worker>(table);
+        expect(workerReducer(undefined, {} as Events.EntityActions<Worker>)).toEqual(initialState);
+        expect(workerReducer(undefined, { type: 'UNKNOWN' } as unknown as Events.EntityActions<Worker>)).toEqual(initialState);
+    });
+
+    it('updating increases', () => {
+        const workerReducer = reducer<Worker>(table);
+        expect(workerReducer(undefined, { type: Events.UPDATING_ENTITIES, table })).toEqual({
+            updating: 1,
+            data: new Map(),
+            relatedTables: []
+        });
+    });
+});

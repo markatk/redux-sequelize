@@ -6,6 +6,9 @@
         "baseUrl": ".",
         "outDir": "dist",
         "strict": true,
-        "target": "es6"
-    }
+        "target": "es6",
+    },
+    "include": [
+        "test/**/**.ts"
+    ]
 }

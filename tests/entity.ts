@@ -1,5 +1,5 @@
 /*
- * File: reducer.ts
+ * File: entity.ts
  * Author: MarkAtk
  * Date: 11.03.20
  *
@@ -26,32 +26,9 @@
  * SOFTWARE.
  */
 
-import { UPDATING_ENTITIES, UPDATING_ENTITIES_FAILED, GET_ENTITY, GET_ENTITIES, SET_ENTITY, CREATE_ENTITY, DELETE_ENTITY, EntityActions } from './events';
-import { Entity } from './entity';
+import { Entity } from '../lib';
 
-interface EntitiesState<T extends Entity> {
-    updating: number;
-    data: Map<number, T>;
-    relatedTables: string[];
-}
-
-const initialState = {
-    updating: 0,
-    data: new Map(),
-    relatedTables: []
-};
-
-export default function reducer<T extends Entity>(table: string) {
-    return (state: EntitiesState<T> = initialState, action: EntityActions<T>): EntitiesState<T> => {
-        switch (action.type) {
-            case UPDATING_ENTITIES:
-                return {
-                    ...state,
-                    updating: state.updating + 1
-                };
-
-            default:
-                return state;
-        }
-    };
+export interface Worker extends Entity {
+    name: string;
+    workId: number;
 }
