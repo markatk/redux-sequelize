@@ -27,6 +27,7 @@
  */
 
 import { reducer, Events } from '../lib';
+import { updateEntities, updatingEntitiesFailed } from '../lib/actions';
 import { Worker } from './entity';
 
 const initialState = {
@@ -49,11 +50,48 @@ describe('entity reducer', () => {
         expect(workerReducer(undefined, { type: 'UNKNOWN' } as unknown as Events.EntityActions<Worker>)).toEqual(initialState);
     });
 
-    it('updating increases', () => {
+    it('updating increases counter', () => {
         const workerReducer = reducer<Worker>(table);
-        expect(workerReducer(undefined, { type: Events.UPDATING_ENTITIES, table })).toEqual({
+        expect(workerReducer(undefined, updateEntities(table))).toEqual({
             updating: 1,
             data: {},
+            relatedTables: []
+        });
+    });
+
+    it('updating failed decreases counter', () => {
+        const workerReducer = reducer<Worker>(table);
+        expect(workerReducer(undefined, updatingEntitiesFailed(table, null, null))).toEqual({
+            updating: -1,
+            data: {},
+            relatedTables: []
+        });
+    });
+
+    it('add entity to store', () => {
+        const workerReducer = reducer<Worker>(table);
+        const worker: Worker = {
+            id: 1,
+            name: 'Thomas',
+            workId: 55
+        };
+
+        const state = workerReducer(undefined, updateEntities(table));
+        expect(state).toEqual({
+            updating: 1,
+            data: {},
+            relatedTables: []
+        });
+
+        expect(workerReducer(state, {
+            type: Events.SET_ENTITY,
+            table,
+            entity: worker
+        })).toEqual({
+            updating: 0,
+            data: {
+                [1]: worker
+            },
             relatedTables: []
         });
     });

@@ -32,3 +32,11 @@ export interface Worker extends Entity {
     name: string;
     workId: number;
 }
+
+export function toWorker(data: any): Worker {
+    return {
+        id: data.id,
+        name: data.name,
+        workId: data.workId
+    };
+}

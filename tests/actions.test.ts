@@ -1,7 +1,7 @@
 /*
- * File: helpers.ts
+ * File: actions.test.ts
  * Author: MarkAtk
- * Date: 11.03.20
+ * Date: 12.03.20
  *
  * MIT License
  *
@@ -26,18 +26,23 @@
  * SOFTWARE.
  */
 
-export function isRelatedEntity(value: object): boolean {
-    if (value instanceof Object === false) {
-        return false;
-    }
+import { createActions } from '../lib';
+import { Worker, toWorker } from './entity';
 
-    return 'table' in value && 'id' in value && 'entity' in value;
-}
+describe('entity actions', () => {
+    const {
+        createEntity: createWorker,
+        deleteEntity: deleteWorker,
+        getEntities: getWorkers,
+        getEntity: getWorker,
+        setEntity: setWorker
+    } = createActions<Worker>('workers', toWorker);
 
-export function isRelatedEntities(value: object): boolean {
-    if (value instanceof Object === false) {
-        return false;
-    }
-
-    return 'table' in value && 'entities' in value;
-}
+    it('create actions', () => {
+        expect(createWorker).toBeInstanceOf(Function);
+        expect(deleteWorker).toBeInstanceOf(Function);
+        expect(getWorkers).toBeInstanceOf(Function);
+        expect(getWorker).toBeInstanceOf(Function);
+        expect(setWorker).toBeInstanceOf(Function);
+    });
+});

@@ -34,12 +34,12 @@ export const SET_ENTITY = 'RS_SET_ENTITY';
 export const SET_ENTITIES = 'RS_SET_ENTITIES';
 export const DELETE_ENTITY = 'RS_DELETE_ENTITY';
 
-interface UpdatingEntitiesAction {
+export interface UpdatingEntitiesAction {
     type: typeof UPDATING_ENTITIES;
     table: string;
 }
 
-interface UpdatingEntitiesFailedAction {
+export interface UpdatingEntitiesFailedAction {
     type: typeof UPDATING_ENTITIES_FAILED;
     table: string;
     message: string;
@@ -48,22 +48,22 @@ interface UpdatingEntitiesFailedAction {
     error?: any;
 }
 
-interface SetEntityAction<T extends Entity> {
+export interface SetEntityAction<T extends Entity> {
     type: typeof SET_ENTITY;
     table: string;
     entity: T;
 }
 
-interface SetEntitiesAction<T extends Entity> {
+export interface SetEntitiesAction<T extends Entity> {
     type: typeof SET_ENTITIES;
     table: string;
     entities: T[];
 }
 
-interface DeleteEntityAction {
+export interface DeleteEntityAction {
     type: typeof DELETE_ENTITY;
     table: string;
-    key: number;
+    id: number;
 }
 
 export type EntityActions<T extends Entity> = UpdatingEntitiesAction | UpdatingEntitiesFailedAction | SetEntityAction<T> | SetEntitiesAction<T> |

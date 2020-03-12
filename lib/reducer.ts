@@ -29,21 +29,21 @@
 import _ from 'lodash';
 
 import { UPDATING_ENTITIES, UPDATING_ENTITIES_FAILED, SET_ENTITY, SET_ENTITIES, DELETE_ENTITY, EntityActions } from './events';
-import { Entity } from './entity';
+import { Entity } from './types';
 import { isRelatedEntities, isRelatedEntity } from './helpers';
 
 function getRelatedTables(currentTables: string[], entities: Entity[]): string[] {
-    return _.uniq(currentTables.concat(entities.map(entity => {
+    return _.uniq(currentTables.concat(entities.map((entity): string[] => {
         return Object.keys(entity)
-            .filter(key => isRelatedEntity(entity[key]) || isRelatedEntities(entity[key]))
-            .map(key => entity[key].table);
+            .filter(id => isRelatedEntity(entity[id]) || isRelatedEntities(entity[id]))
+            .map(id => entity[id].table);
         })
         .flat()));
 }
 
 interface EntitiesState<T extends Entity> {
     updating: number;
-    data: {[key: number]: T};
+    data: {[id: number]: T};
     relatedTables: string[];
 }
 
@@ -55,6 +55,10 @@ const initialState = {
 
 export default function reducer<T extends Entity>(table: string) {
     return (state: EntitiesState<T> = initialState, action: EntityActions<T>): EntitiesState<T> => {
+        if (action.table !== table) {
+            return state;
+        }
+
         switch (action.type) {
             case UPDATING_ENTITIES:
                 return {
@@ -81,7 +85,7 @@ export default function reducer<T extends Entity>(table: string) {
                 };
 
             case SET_ENTITIES:
-                const updatedData = action.entities.reduce((ent: {[key: number]: T}, entity) => {
+                const updatedData = action.entities.reduce((ent: {[id: number]: T}, entity) => {
                     ent[entity.id] = entity;
 
                     return ent;
@@ -95,7 +99,7 @@ export default function reducer<T extends Entity>(table: string) {
                 };
 
             case DELETE_ENTITY:
-                const { [action.key]: removedEntity, ...data } = state.data;
+                const { [action.id]: removedEntity, ...data } = state.data;
 
                 return {
                     ...state,

@@ -26,9 +26,10 @@
  * SOFTWARE.
  */
 
-import { Entity } from './entity';
+import { Entity, RelatedEntity, RelatedEntities, Includeable, ToEntity } from './types';
 import middleware from './middleware';
 import reducer from './reducer';
 import * as Events from './events';
+import { createActions } from './actions';
 
-export { middleware, reducer, Entity, Events };
+export { middleware, reducer, Entity, RelatedEntity, RelatedEntities, Events, Includeable, ToEntity, createActions };

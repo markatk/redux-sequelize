@@ -1,5 +1,5 @@
 /*
- * File: entity.ts
+ * File: types.ts
  * Author: MarkAtk
  * Date: 11.03.20
  *
@@ -29,4 +29,24 @@
 export interface Entity {
     [key: string]: any;
     id?: number;
+}
+
+// TODO: Replace data type with sequelize model
+export type ToEntity<T extends Entity> = (data: any) => T;
+
+export interface Includeable {
+    table: string;
+    key: string;
+    toEntity?: ToEntity<Entity>;
+}
+
+export interface RelatedEntity<T extends Entity> {
+    table: string;
+    id: number;
+    entity: T;
+}
+
+export interface RelatedEntities<T extends Entity> {
+    table: string;
+    entities: {[id: number]: T};
 }
