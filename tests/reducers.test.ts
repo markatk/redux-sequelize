@@ -26,6 +26,10 @@
  * SOFTWARE.
  */
 
+import { Reducer } from 'redux';
+import configureMockStore from 'redux-mock-store';
+import thunk from 'redux-thunk';
+
 import { reducer, Events } from '../lib';
 import { updateEntities, updatingEntitiesFailed } from '../lib/actions';
 import { Worker } from './entity';
@@ -37,21 +41,23 @@ const initialState = {
 };
 
 const table = 'workers';
+let workerReducer: Reducer;
 
 describe('entity reducer', () => {
+    beforeEach(() => {
+        workerReducer = reducer<Worker>(table);
+    });
+
     it('create valid reducer', () => {
-        const workerReducer = reducer<Worker>(table);
         expect(workerReducer).not.toBeNull();
     });
 
     it('handle unknown action', () => {
-        const workerReducer = reducer<Worker>(table);
         expect(workerReducer(undefined, {} as Events.EntityActions<Worker>)).toEqual(initialState);
         expect(workerReducer(undefined, { type: 'UNKNOWN' } as unknown as Events.EntityActions<Worker>)).toEqual(initialState);
     });
 
     it('updating increases counter', () => {
-        const workerReducer = reducer<Worker>(table);
         expect(workerReducer(undefined, updateEntities(table))).toEqual({
             updating: 1,
             data: {},
@@ -60,38 +66,9 @@ describe('entity reducer', () => {
     });
 
     it('updating failed decreases counter', () => {
-        const workerReducer = reducer<Worker>(table);
         expect(workerReducer(undefined, updatingEntitiesFailed(table, null, null))).toEqual({
             updating: -1,
             data: {},
-            relatedTables: []
-        });
-    });
-
-    it('add entity to store', () => {
-        const workerReducer = reducer<Worker>(table);
-        const worker: Worker = {
-            id: 1,
-            name: 'Thomas',
-            workId: 55
-        };
-
-        const state = workerReducer(undefined, updateEntities(table));
-        expect(state).toEqual({
-            updating: 1,
-            data: {},
-            relatedTables: []
-        });
-
-        expect(workerReducer(state, {
-            type: Events.SET_ENTITY,
-            table,
-            entity: worker
-        })).toEqual({
-            updating: 0,
-            data: {
-                [1]: worker
-            },
             relatedTables: []
         });
     });

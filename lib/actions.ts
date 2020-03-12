@@ -27,6 +27,7 @@
  */
 
 import { Dispatch } from 'redux';
+import { Sequelize, WhereOptions } from 'sequelize';
 
 import * as Events from './events';
 import { Entity, Includeable, ToEntity } from './types';
@@ -55,11 +56,52 @@ export function updatingEntitiesFailed(
     };
 }
 
-export function createActions<T extends Entity>(table: string, toEntity: ToEntity<T>, include: Includeable[] = []) {
+export function setEntity<T extends Entity>(table: string, entity: T): Events.SetEntityAction<T> {
+    return {
+        type: Events.SET_ENTITY,
+        table,
+        entity
+    };
+}
+
+export function setEntities<T extends Entity>(table: string, entities: T[]): Events.SetEntitiesAction<T> {
+    return {
+        type: Events.SET_ENTITIES,
+        table,
+        entities
+    };
+}
+
+export function deleteEntity(table: string, id: number): Events.DeleteEntityAction {
+    return {
+        type: Events.DELETE_ENTITY,
+        table,
+        id
+    };
+}
+
+export function createActions<T extends Entity>(sequelize: Sequelize, table: string, toEntity: ToEntity<T>, include: Includeable[] = []) {
     return {
         createEntity: (data: T) => {
             return async (dispatch: Dispatch<Events.EntityActions<T>>) => {
                 dispatch(updateEntities(table));
+
+                try {
+                    const model = sequelize.model(table);
+                    if (model == null) {
+                        dispatch(updatingEntitiesFailed(table, 'create', `Model for table "${table}" not found`, null, data));
+
+                        return;
+                    }
+
+                    const entity = model.build(data);
+
+                    await entity.save();
+
+                    dispatch(setEntity(table, toEntity(entity)));
+                } catch (err) {
+                    dispatch(updatingEntitiesFailed(table, 'create', `Unable to create entity`, err, data));
+                }
             };
         },
         getEntity: (id: number) => {
@@ -67,7 +109,7 @@ export function createActions<T extends Entity>(table: string, toEntity: ToEntit
                 dispatch(updateEntities(table));
             }
         },
-        getEntities: (id: number) => {
+        getEntities: (where: WhereOptions) => {
             return async (dispatch: Dispatch<Events.EntityActions<T>>) => {
                 dispatch(updateEntities(table));
             }

@@ -26,17 +26,33 @@
  * SOFTWARE.
  */
 
-import { createActions } from '../lib';
+import configureMockStore from 'redux-mock-store';
+import thunk from 'redux-thunk';
+
+import { createActions, Events } from '../lib';
 import { Worker, toWorker } from './entity';
+import createDatabase from './database';
+
+const table = 'workers';
+const database = createDatabase();
+const {
+    createEntity: createWorker,
+    deleteEntity: deleteWorker,
+    getEntities: getWorkers,
+    getEntity: getWorker,
+    setEntity: setWorker
+} = createActions<Worker>(database, table, toWorker);
+
+const mockStore = configureMockStore([thunk]);
 
 describe('entity actions', () => {
-    const {
-        createEntity: createWorker,
-        deleteEntity: deleteWorker,
-        getEntities: getWorkers,
-        getEntity: getWorker,
-        setEntity: setWorker
-    } = createActions<Worker>('workers', toWorker);
+    beforeAll(() => {
+        return database.sync();
+    });
+
+    afterAll(() => {
+        database.close();
+    });
 
     it('create actions', () => {
         expect(createWorker).toBeInstanceOf(Function);
@@ -44,5 +60,31 @@ describe('entity actions', () => {
         expect(getWorkers).toBeInstanceOf(Function);
         expect(getWorker).toBeInstanceOf(Function);
         expect(setWorker).toBeInstanceOf(Function);
+    });
+
+    it('create entity', () => {
+        const worker = {
+            id: 1,
+            name: 'Thomas',
+            workId: 55
+        };
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.SET_ENTITY,
+                table,
+                entity: worker
+            }
+        ];
+
+        const store = mockStore();
+
+        return store.dispatch(createWorker(worker)).then(() => {
+            expect(store.getActions()).toEqual(expectedActions);
+        });
     });
 });
