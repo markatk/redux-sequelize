@@ -33,12 +33,12 @@ import { Entity } from './types';
 import { isRelatedEntities, isRelatedEntity } from './helpers';
 
 function getRelatedTables(currentTables: string[], entities: Entity[]): string[] {
-    return _.uniq(currentTables.concat(entities.map((entity): string[] => {
+    return _.uniq(currentTables.concat(...entities.map((entity): string[] => {
         return Object.keys(entity)
             .filter(id => isRelatedEntity(entity[id]) || isRelatedEntities(entity[id]))
             .map(id => entity[id].table);
-        })
-        .flat()));
+        }))
+    );
 }
 
 interface EntitiesState<T extends Entity> {
@@ -80,13 +80,13 @@ export default function reducer<T extends Entity>(table: string) {
                     relatedTables: getRelatedTables(state.relatedTables, [action.entity]),
                     data: {
                         ...state.data,
-                        [action.entity.id]: action.entity
+                        [action.entity.id as number]: action.entity
                     }
                 };
 
             case SET_ENTITIES:
                 const updatedData = action.entities.reduce((ent: {[id: number]: T}, entity) => {
-                    ent[entity.id] = entity;
+                    ent[entity.id as number] = entity;
 
                     return ent;
                 }, { ...state.data });

@@ -7,8 +7,13 @@
         "outDir": "dist",
         "strict": true,
         "target": "es6",
+        "esModuleInterop": true,
+        "paths": {
+            "*": ["node_modules/*"]
+        }
     },
     "include": [
+        "lib/**/**.ts",
         "test/**/**.ts"
     ]
 }

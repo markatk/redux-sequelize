@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-export function isRelatedEntity(value: object): boolean {
+export function isRelatedEntity(value: {[key: string]: any}): boolean {
     if (value instanceof Object === false) {
         return false;
     }
@@ -38,7 +38,7 @@ export function isRelatedEntity(value: object): boolean {
     return value[`table`] != null;
 }
 
-export function isRelatedEntities(value: object): boolean {
+export function isRelatedEntities(value: {[key: string]: any}): boolean {
     if (value instanceof Object === false) {
         return false;
     }

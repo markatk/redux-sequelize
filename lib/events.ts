@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-import { Entity } from './entity';
+import { Entity } from './types';
 
 export const UPDATING_ENTITIES = 'RS_UPDATING_ENTITIES';
 export const UPDATING_ENTITIES_FAILED = 'RS_UPDATING_ENTITIES_FAILED';
@@ -45,7 +45,6 @@ export interface UpdatingEntitiesFailedAction {
     message: string;
     action: string;
     data?: any;
-    error?: any;
 }
 
 export interface SetEntityAction<T extends Entity> {
