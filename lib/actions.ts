@@ -43,15 +43,13 @@ export function updatingEntitiesFailed(
     table: string,
     action: string,
     message: string,
-    error: any = null,
-    data: object = null
+    data: any = null
 ): Events.UpdatingEntitiesFailedAction {
     return {
         type: Events.UPDATING_ENTITIES_FAILED,
         table,
         action,
         message,
-        error,
         data
     };
 }
@@ -88,40 +86,95 @@ export function createActions<T extends Entity>(sequelize: Sequelize, table: str
 
                 try {
                     const model = sequelize.model(table);
-                    if (model == null) {
-                        dispatch(updatingEntitiesFailed(table, 'create', `Model for table "${table}" not found`, null, data));
-
-                        return;
-                    }
-
                     const entity = model.build(data);
 
                     await entity.save();
 
-                    dispatch(setEntity(table, toEntity(entity)));
+                    dispatch(setEntity<T>(table, toEntity(entity)));
                 } catch (err) {
-                    dispatch(updatingEntitiesFailed(table, 'create', `Unable to create entity`, err, data));
+                    dispatch(updatingEntitiesFailed(table, 'create', err.message, data));
                 }
             };
         },
         getEntity: (id: number) => {
             return async (dispatch: Dispatch<Events.EntityActions<T>>) => {
                 dispatch(updateEntities(table));
+
+                try {
+                    const model = sequelize.model(table);
+                    const entity = await model.findByPk(id);
+                    if (entity == null) {
+                        dispatch(updatingEntitiesFailed(table, 'get', 'Entity not found', id));
+
+                        return;
+                    }
+
+                    dispatch(setEntity<T>(table, toEntity(entity)));
+                } catch (err) {
+                    dispatch(updatingEntitiesFailed(table, 'get', err.message, id));
+                }
             }
         },
         getEntities: (where: WhereOptions) => {
             return async (dispatch: Dispatch<Events.EntityActions<T>>) => {
                 dispatch(updateEntities(table));
+
+                try {
+                    const model = sequelize.model(table);
+                    const entities = await model.findAll({ where });
+
+                    // convert models to entities and dispatch
+                    dispatch(setEntities<T>(table, entities.map(entity => toEntity(entity))));
+                } catch (err) {
+                    dispatch(updatingEntitiesFailed(table, 'get', err.message, where));
+                }
             }
         },
         setEntity: (data: T) => {
             return async (dispatch: Dispatch<Events.EntityActions<T>>) => {
                 dispatch(updateEntities(table));
+
+                try {
+                    const model = sequelize.model(table);
+                    const entity = await model.findByPk(data.id);
+                    if (entity == null) {
+                        dispatch(updatingEntitiesFailed(table, 'get', 'Entity not found', data));
+
+                        return;
+                    }
+
+                    // apply changes
+                    for (const key in data) {
+                        if (data.hasOwnProperty(key)) {
+                            entity.set(key as any, data[key]);
+                        }
+                    }
+
+                    await entity.save();
+
+                    dispatch(setEntity(table, toEntity(entity)));
+                } catch (err) {
+                    dispatch(updatingEntitiesFailed(table, 'set', err.message, data));
+                }
             };
         },
         deleteEntity: (id: number) => {
             return async (dispatch: Dispatch<Events.EntityActions<T>>) => {
                 dispatch(updateEntities(table));
+
+                try {
+                    const model = sequelize.model(table);
+                    const count = await model.destroy({ where: { id }});
+                    if (count === 0) {
+                        dispatch(updatingEntitiesFailed(table, 'delete', 'Entity not found', id));
+
+                        return;
+                    }
+
+                    dispatch(deleteEntity(table, id));
+                } catch (err) {
+                    dispatch(updatingEntitiesFailed(table, 'delete', err.message, id));
+                }
             };
         }
     };

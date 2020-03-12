@@ -30,6 +30,7 @@ import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 
 import { createActions, Events } from '../lib';
+import { updateEntities, updatingEntitiesFailed, setEntity, setEntities, deleteEntity } from '../lib/actions';
 import { Worker, toWorker } from './entity';
 import createDatabase from './database';
 
@@ -57,11 +58,15 @@ describe('entity actions', () => {
         return database.sync();
     });
 
+    beforeEach(() => {
+        return database.truncate();
+    });
+
     afterAll(() => {
         database.close();
     });
 
-    it('create actions', () => {
+    it('create entity actions', () => {
         expect(createWorker).toBeInstanceOf(Function);
         expect(deleteWorker).toBeInstanceOf(Function);
         expect(getWorkers).toBeInstanceOf(Function);
@@ -88,5 +93,125 @@ describe('entity actions', () => {
         expect(store.getActions()).toEqual(expectedActions);
 
         expect(await database.model(table).count()).toBe(1);
+    });
+
+    it('create entity on invalid model', async () => {
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table: 'test'
+            },
+            {
+                type: Events.UPDATING_ENTITIES_FAILED,
+                table: 'test',
+                action: 'create',
+                message: 'test has not been defined',
+                data: worker
+            }
+        ];
+
+        const store = mockStore();
+        const { createEntity: createTest } = createActions<Worker>(database, 'test', toWorker);
+
+        await store.dispatch(createTest(worker));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(0);
+    });
+
+    it('get valid entity', async () => {
+        await database.model(table).create(worker);
+        expect(await database.model(table).count()).toBe(1);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.SET_ENTITY,
+                table,
+                entity: worker
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(getWorker(1));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(1);
+    });
+
+    it('get invalid entity', async () => {
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.UPDATING_ENTITIES_FAILED,
+                table,
+                action: 'get',
+                message: 'Entity not found',
+                data: 1
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(getWorker(1));
+        expect(store.getActions()).toEqual(expectedActions);
+    });
+});
+
+describe('internal actions', () => {
+    it('update entities action', () => {
+        expect(updateEntities(table)).toEqual({
+            type: Events.UPDATING_ENTITIES,
+            table
+        });
+    });
+
+    it('update entities failed action', () => {
+        expect(updatingEntitiesFailed(table, 'test', 'test message', worker)).toEqual({
+            type: Events.UPDATING_ENTITIES_FAILED,
+            table,
+            action: 'test',
+            message: 'test message',
+            data: worker
+        });
+
+        expect(updatingEntitiesFailed(table, 'test', 'test message')).toEqual({
+            type: Events.UPDATING_ENTITIES_FAILED,
+            table,
+            action: 'test',
+            message: 'test message',
+            data: null
+        });
+    });
+
+    it('set entity action', () => {
+        expect(setEntity(table, worker)).toEqual({
+            type: Events.SET_ENTITY,
+            table,
+            entity: worker
+        });
+    });
+
+    it('set entities action', () => {
+        expect(setEntities(table, [worker])).toEqual({
+            type: Events.SET_ENTITIES,
+            table,
+            entities: [worker]
+        });
+    });
+
+    it('delete entity action', () => {
+        expect(deleteEntity(table, 5)).toEqual({
+            type: Events.DELETE_ENTITY,
+            table,
+            id: 5
+        });
     });
 });
