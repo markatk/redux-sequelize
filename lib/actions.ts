@@ -31,6 +31,7 @@ import { Sequelize, WhereOptions } from 'sequelize';
 
 import * as Events from './events';
 import { Entity, Includeable, ToEntity } from './types';
+import { includeablesToSequelizeInclude } from './helpers';
 
 export function updateEntities(table: string): Events.UpdatingEntitiesAction {
     return {
@@ -102,7 +103,7 @@ export function createActions<T extends Entity>(sequelize: Sequelize, table: str
 
                 try {
                     const model = sequelize.model(table);
-                    const entity = await model.findByPk(id);
+                    const entity = await model.findByPk(id, { include: includeablesToSequelizeInclude(sequelize, include) });
                     if (entity == null) {
                         dispatch(updatingEntitiesFailed(table, 'get', 'Entity not found', id));
 
@@ -121,7 +122,7 @@ export function createActions<T extends Entity>(sequelize: Sequelize, table: str
 
                 try {
                     const model = sequelize.model(table);
-                    const entities = await model.findAll({ where });
+                    const entities = await model.findAll({ where, include: includeablesToSequelizeInclude(sequelize, include) });
 
                     // convert models to entities and dispatch
                     dispatch(setEntities<T>(table, entities.map(entity => toEntity(entity))));

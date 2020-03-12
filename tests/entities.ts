@@ -1,5 +1,5 @@
 /*
- * File: entity.ts
+ * File: entities.ts
  * Author: MarkAtk
  * Date: 11.03.20
  *
@@ -39,5 +39,29 @@ export function toWorker(data: Model): Worker {
         id: data.get('id') as number,
         name: data.get('name') as string,
         workId: data.get('workId') as number
+    };
+}
+
+export interface Project extends Entity {
+    name: string;
+}
+
+export function toProject(data: Model): Project {
+    return {
+        id: data.get('id') as number,
+        name: data.get('name') as string
+    };
+}
+
+export interface Department extends Entity {
+    name: string;
+    floor: number;
+}
+
+export function toDepartment(data: Model): Department {
+    return {
+        id: data.get('id') as number,
+        name: data.get('name') as string,
+        floor: data.get('floor') as number
     };
 }

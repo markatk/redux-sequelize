@@ -26,6 +26,10 @@
  * SOFTWARE.
  */
 
+import { Includeable as SequelizeIncludeable, Sequelize } from 'sequelize';
+
+import { Includeable } from './types';
+
 export function isRelatedEntity(value: {[key: string]: any}): boolean {
     if (value instanceof Object === false) {
         return false;
@@ -48,4 +52,12 @@ export function isRelatedEntities(value: {[key: string]: any}): boolean {
     }
 
     return value[`table`] != null && value[`entities`] != null;
+}
+
+export function includeablesToSequelizeInclude(sequelize: Sequelize, includeables: Includeable[]): SequelizeIncludeable[] {
+    return includeables.map(includeable => ({
+        as: includeable.key,
+        model: sequelize.model(includeable.table),
+        attributes: includeable.toEntity == null ? ['id'] : undefined
+    }));
 }

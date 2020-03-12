@@ -39,5 +39,14 @@ export default function createDatabase(): Sequelize {
         workId: DataTypes.NUMBER
     }, {});
 
+    sequelize.define('projects', {
+        name: DataTypes.STRING
+    });
+
+    sequelize.define('departments', {
+        name: DataTypes.STRING,
+        floor: DataTypes.NUMBER
+    });
+
     return sequelize;
 }

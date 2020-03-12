@@ -27,12 +27,10 @@
  */
 
 import { Reducer } from 'redux';
-import configureMockStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
 
 import { reducer, Events } from '../lib';
 import { updateEntities, updatingEntitiesFailed } from '../lib/actions';
-import { Worker } from './entity';
+import { Worker } from './entities';
 
 const initialState = {
     updating: 0,

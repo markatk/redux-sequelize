@@ -31,7 +31,7 @@ import thunk from 'redux-thunk';
 
 import { createActions, Events } from '../lib';
 import { updateEntities, updatingEntitiesFailed, setEntity, setEntities, deleteEntity } from '../lib/actions';
-import { Worker, toWorker } from './entity';
+import { Worker, toWorker } from './entities';
 import createDatabase from './database';
 
 const table = 'workers';

@@ -26,7 +26,9 @@
  * SOFTWARE.
  */
 
-import { isRelatedEntity, isRelatedEntities } from '../lib/helpers';
+import { isRelatedEntity, isRelatedEntities, includeablesToSequelizeInclude } from '../lib/helpers';
+import createDatabase from './database';
+import { toWorker } from './entities';
 
 const worker = {
     id: 5,
@@ -34,7 +36,17 @@ const worker = {
     workId: 55
 };
 
+const database = createDatabase();
+
 describe('helper functions', () => {
+    beforeAll(() => {
+        return database.sync();
+    });
+
+    beforeEach(() => {
+        return database.truncate();
+    });
+
     it('valid related entity', () => {
         expect(isRelatedEntity({
             table: 'workers',
@@ -141,5 +153,39 @@ describe('helper functions', () => {
             table: null,
             entities: null
         })).toBe(false);
+    });
+
+    it('valid includeables', () => {
+        expect(includeablesToSequelizeInclude(database, [
+            {
+                table: 'projects',
+                key: 'projects',
+            },
+            {
+                table: 'departments',
+                key: 'department'
+            },
+            {
+                table: 'workers',
+                key: 'boss',
+                toEntity: toWorker
+            }
+        ])).toEqual([
+            {
+                as: 'projects',
+                model: database.model('projects'),
+                attributes: ['id']
+            },
+            {
+                as: 'department',
+                model: database.model('departments'),
+                attributes: ['id']
+            },
+            {
+                as: 'boss',
+                model: database.model('workers'),
+                attributes: undefined
+            }
+        ]);
     });
 });
