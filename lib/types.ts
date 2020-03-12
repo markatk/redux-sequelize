@@ -26,13 +26,14 @@
  * SOFTWARE.
  */
 
+import { Model } from 'sequelize';
+
 export interface Entity {
     [key: string]: any;
     id?: number;
 }
 
-// TODO: Replace data type with sequelize model
-export type ToEntity<T extends Entity> = (data: any) => T;
+export type ToEntity<T extends Entity> = (data: Model) => T;
 
 export interface Includeable {
     table: string;

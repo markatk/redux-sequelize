@@ -27,16 +27,17 @@
  */
 
 import { Entity } from '../lib';
+import { Model } from 'sequelize';
 
 export interface Worker extends Entity {
     name: string;
     workId: number;
 }
 
-export function toWorker(data: any): Worker {
+export function toWorker(data: Model): Worker {
     return {
-        id: data.id,
-        name: data.name,
-        workId: data.workId
+        id: data.get('id') as number,
+        name: data.get('name') as string,
+        workId: data.get('workId') as number
     };
 }
