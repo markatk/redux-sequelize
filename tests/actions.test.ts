@@ -35,6 +35,7 @@ import createDatabase from './database';
 
 const table = 'workers';
 const database = createDatabase();
+
 const {
     createEntity: createWorker,
     deleteEntity: deleteWorker,
@@ -42,6 +43,12 @@ const {
     getEntity: getWorker,
     setEntity: setWorker
 } = createActions<Worker>(database, table, toWorker);
+
+const worker = {
+    id: 1,
+    name: 'Thomas',
+    workId: 55
+};
 
 const mockStore = configureMockStore([thunk]);
 
@@ -62,13 +69,7 @@ describe('entity actions', () => {
         expect(setWorker).toBeInstanceOf(Function);
     });
 
-    it('create entity', () => {
-        const worker = {
-            id: 1,
-            name: 'Thomas',
-            workId: 55
-        };
-
+    it('create entity', async () => {
         const expectedActions = [
             {
                 type: Events.UPDATING_ENTITIES,
@@ -83,8 +84,9 @@ describe('entity actions', () => {
 
         const store = mockStore();
 
-        return store.dispatch(createWorker(worker)).then(() => {
-            expect(store.getActions()).toEqual(expectedActions);
-        });
+        await store.dispatch(createWorker(worker));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(1);
     });
 });

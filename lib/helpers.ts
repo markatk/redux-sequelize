@@ -31,7 +31,11 @@ export function isRelatedEntity(value: object): boolean {
         return false;
     }
 
-    return 'table' in value && 'id' in value && 'entity' in value;
+    if ('table' in value === false || 'id' in value === false || 'entity' in value === false) {
+        return false;
+    }
+
+    return value[`table`] != null;
 }
 
 export function isRelatedEntities(value: object): boolean {
@@ -39,5 +43,9 @@ export function isRelatedEntities(value: object): boolean {
         return false;
     }
 
-    return 'table' in value && 'entities' in value;
+    if ('table' in value === false || 'entities' in value === false) {
+        return false;
+    }
+
+    return value[`table`] != null && value[`entities`] != null;
 }
