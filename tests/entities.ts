@@ -55,7 +55,7 @@ export function toWorker(data: Model): Worker {
 export const workerInclude: Includeable[] = [
     { table: 'projects', key: 'projects' },
     { table: 'departments', key: 'department' },
-    { table: 'workers', key: 'boss' }
+    { table: 'workers', key: 'boss', toEntity: toWorker }
 ];
 
 interface ProjectModel extends Entity {

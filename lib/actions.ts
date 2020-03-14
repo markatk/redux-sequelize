@@ -27,11 +27,12 @@
  */
 
 import { Dispatch } from 'redux';
-import { Sequelize, WhereOptions, Model } from 'sequelize';
+import { Sequelize, WhereOptions, Model, TableHints } from 'sequelize';
+import _ from 'lodash';
 
 import * as Events from './events';
 import { Entity, Includeable, ToEntity } from './types';
-import { includeablesToSequelizeInclude } from './helpers';
+import { includeablesToSequelizeInclude, includeablesToEntityStore } from './helpers';
 
 export function updateEntities(table: string): Events.UpdatingEntitiesAction {
     return {
@@ -77,6 +78,48 @@ export function deleteEntity(table: string, id: number): Events.DeleteEntityActi
         table,
         id
     };
+}
+
+function dispatchIncludedEntities<T extends Entity>(
+    dispatch: Dispatch<Events.EntityActions<T>>,
+    entities: Model[],
+    includeables: Includeable[]
+): {[table: string]: Entity[]} {
+    const data = includeablesToEntityStore(includeables);
+
+    for (const table in data) {
+        if (data.hasOwnProperty(table)) {
+            dispatch(updateEntities(table));
+        }
+    }
+
+    // parse all included entities into arrays
+    const conversionIncludeables = includeables.filter(includeable => includeable.toEntity != null);
+
+    for (const entity of entities) {
+        for (const includeable of conversionIncludeables) {
+            const includedEntity = entity.get(includeable.key as any);
+
+            if (_.isArray(includedEntity)) {
+                for (const element of includedEntity) {
+                    if (data[includeable.table].some(ent => ent.id === element.id) === false) {
+                        data[includeable.table].push(includeable.toEntity!(element));
+                    }
+                }
+            } else if (includedEntity != null && data[includeable.table].some(ent => ent.id === includedEntity.id) === false) {
+                data[includeable.table].push(includeable.toEntity!(includedEntity));
+            }
+        }
+    }
+
+    // dispatch all tables
+    for (const table in data) {
+        if (data.hasOwnProperty(table)) {
+            dispatch(setEntities(table, data[table] as T[]));
+        }
+    }
+
+    return data;
 }
 
 export function createActions<T extends Entity>(sequelize: Sequelize, table: string, toEntity: ToEntity<T>, include: Includeable[] = []) {
@@ -146,6 +189,8 @@ export function createActions<T extends Entity>(sequelize: Sequelize, table: str
                         return;
                     }
 
+                    dispatchIncludedEntities(dispatch, [entity], include);
+
                     dispatch(setEntity<T>(table, toEntity(entity)));
                 } catch (err) {
                     dispatch(updatingEntitiesFailed(table, 'get', err.message, id));
@@ -159,6 +204,8 @@ export function createActions<T extends Entity>(sequelize: Sequelize, table: str
                 try {
                     const model = sequelize.model(table);
                     const entities = await model.findAll({ where, include: includeablesToSequelizeInclude(sequelize, include) });
+
+                    dispatchIncludedEntities(dispatch, entities, include);
 
                     // convert models to entities and dispatch
                     dispatch(setEntities<T>(table, entities.map(entity => toEntity(entity))));

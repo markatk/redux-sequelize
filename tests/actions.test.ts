@@ -140,6 +140,15 @@ describe('entity actions', () => {
                 table
             },
             {
+                type: Events.UPDATING_ENTITIES,
+                table: 'workers'
+            },
+            {
+                type: Events.SET_ENTITIES,
+                table: 'workers',
+                entities: []
+            },
+            {
                 type: Events.SET_ENTITY,
                 table,
                 entity: {
@@ -229,10 +238,20 @@ describe('entity actions', () => {
                 table
             },
             {
+                type: Events.UPDATING_ENTITIES,
+                table: 'workers'
+            },
+            {
+                type: Events.SET_ENTITIES,
+                table: 'workers',
+                entities: [toWorker(bossEntity)]
+            },
+            {
                 type: Events.SET_ENTITY,
                 table,
                 entity: {
                     ...worker,
+                    // TODO: Add function to create such mapping
                     boss: {
                         table: 'workers',
                         id: boss.id,
@@ -272,12 +291,22 @@ describe('entity actions', () => {
                 table
             },
             {
+                type: Events.UPDATING_ENTITIES,
+                table: 'workers'
+            },
+            {
+                type: Events.SET_ENTITIES,
+                table: 'workers',
+                entities: []
+            },
+            {
                 type: Events.SET_ENTITY,
                 table,
                 entity: {
                     ...worker,
                     boss: mapRelatedEntity<Worker>('workers', null),
                     department: mapRelatedEntity<Department>('departments', null),
+                    // TODO: Add function to create such mapping
                     projects: {
                         table: 'projects',
                         entities: {

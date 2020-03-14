@@ -62,6 +62,16 @@ export function includeablesToSequelizeInclude(sequelize: Sequelize, includeable
     }));
 }
 
+export function includeablesToEntityStore(includeables: Includeable[]): {[table: string]: Entity[]} {
+    return includeables
+        .filter(includeable => includeable.toEntity != null)
+        .reduce((data: {[table: string]: Entity[]}, includeable) => {
+            data[includeable.table] = [];
+
+            return data;
+        }, {});
+}
+
 export function mapRelatedEntity<T extends Entity>(table: string, data: T): RelatedEntity<T> {
     return {
         table,
