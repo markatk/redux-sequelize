@@ -29,9 +29,9 @@
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 
-import { createActions, Events } from '../lib';
+import { createActions, Events, mapRelatedEntity, mapRelatedEntities } from '../lib';
 import { updateEntities, updatingEntitiesFailed, setEntity, setEntities, deleteEntity } from '../lib/actions';
-import { Worker, toWorker } from './entities';
+import { Worker, toWorker, Department, Project, workerInclude } from './entities';
 import createDatabase from './database';
 
 const table = 'workers';
@@ -43,12 +43,18 @@ const {
     getEntities: getWorkers,
     getEntity: getWorker,
     setEntity: setWorker
-} = createActions<Worker>(database, table, toWorker);
+} = createActions<Worker>(database, table, toWorker, workerInclude);
 
 const worker = {
     id: 1,
     name: 'Thomas',
     workId: 55
+};
+
+const boss = {
+    id: 2,
+    name: 'Steven',
+    workId: 3
 };
 
 const mockStore = configureMockStore([thunk]);
@@ -83,7 +89,12 @@ describe('entity actions', () => {
             {
                 type: Events.SET_ENTITY,
                 table,
-                entity: worker
+                entity: {
+                    ...worker,
+                    boss: mapRelatedEntity<Worker>('workers', null),
+                    department: mapRelatedEntity<Department>('departments', null),
+                    projects: mapRelatedEntities<Project>('projects', null)
+                }
             }
         ];
 
@@ -131,7 +142,12 @@ describe('entity actions', () => {
             {
                 type: Events.SET_ENTITY,
                 table,
-                entity: worker
+                entity: {
+                    ...worker,
+                    boss: mapRelatedEntity<Worker>('workers', null),
+                    department: mapRelatedEntity<Department>('departments', null),
+                    projects: mapRelatedEntities<Project>('projects', null)
+                }
             }
         ];
 
@@ -162,6 +178,305 @@ describe('entity actions', () => {
 
         await store.dispatch(getWorker(1));
         expect(store.getActions()).toEqual(expectedActions);
+    });
+
+    it('update entity', async () => {
+        await database.model(table).create(worker);
+        expect(await database.model(table).count()).toBe(1);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.SET_ENTITY,
+                table,
+                entity: {
+                    ...worker,
+                    name: 'Mike',
+                    boss: mapRelatedEntity<Worker>('workers', null),
+                    department: mapRelatedEntity<Department>('departments', null),
+                    projects: mapRelatedEntities<Project>('projects', null)
+                }
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(setWorker({
+            id: 1,
+            name: 'Mike'
+        }));
+
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(1);
+    });
+
+    it('get with related entity', async () => {
+        const workerEntity = await database.model(table).create(worker);
+        const bossEntity = await database.model(table).create(boss);
+
+        const association = database.model(table).associations.boss as any;
+        await association.set(workerEntity, 2);
+
+        expect(await database.model(table).count()).toBe(2);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.SET_ENTITY,
+                table,
+                entity: {
+                    ...worker,
+                    boss: {
+                        table: 'workers',
+                        id: boss.id,
+                        entity: null
+                    },
+                    department: mapRelatedEntity<Department>('departments', null),
+                    projects: mapRelatedEntities<Project>('projects', null)
+                }
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(getWorker(workerEntity.get('id') as number));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        const result = await database.model(table).findByPk(workerEntity.get('id') as number);
+        expect(result.get('bossId')).toBe(bossEntity.get('id') as number);
+
+        expect(await database.model(table).count()).toBe(2);
+    });
+
+    it('get with related entities', async () => {
+        const projectA = await database.model('projects').create({ name: 'Project A' });
+        const projectB = await database.model('projects').create({ name: 'Project B' });
+        const workerEntity = await database.model(table).create(worker);
+
+        const association = database.model(table).associations.projects as any;
+        await association.set(workerEntity, [projectA.get('id') as number, projectB.get('id') as number]);
+
+        expect(await database.model(table).count()).toBe(1);
+        expect(await database.model('projects').count()).toBe(2);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.SET_ENTITY,
+                table,
+                entity: {
+                    ...worker,
+                    boss: mapRelatedEntity<Worker>('workers', null),
+                    department: mapRelatedEntity<Department>('departments', null),
+                    projects: {
+                        table: 'projects',
+                        entities: {
+                            [projectA.get('id') as number]: null,
+                            [projectB.get('id') as number]: null
+                        }
+                    }
+                }
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(getWorker(workerEntity.get('id') as number));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(1);
+
+    });
+
+    it('set related entity', async () => {
+        await database.model(table).create(worker);
+        await database.model(table).create(boss);
+        expect(await database.model(table).count()).toBe(2);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.SET_ENTITY,
+                table,
+                entity: {
+                    ...worker,
+                    boss: {
+                        table: 'workers',
+                        id: boss.id,
+                        entity: null
+                    },
+                    department: mapRelatedEntity<Department>('departments', null),
+                    projects: mapRelatedEntities<Project>('projects', null)
+                }
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(setWorker({
+            ...worker,
+            boss: {
+                table: 'workers',
+                id: boss.id,
+                entity: null
+            }
+        }));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        const result = await database.model(table).findByPk(1);
+        expect(result.get('bossId')).toBe(2);
+
+        expect(await database.model(table).count()).toBe(2);
+    });
+
+    it('set related entities', async () => {
+        const projectA = await database.model('projects').create({ name: 'Project A' });
+        const projectB = await database.model('projects').create({ name: 'Project B' });
+        await database.model(table).create(worker);
+
+        expect(await database.model(table).count()).toBe(1);
+        expect(await database.model('projects').count()).toBe(2);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.SET_ENTITY,
+                table,
+                entity: {
+                    ...worker,
+                    boss: mapRelatedEntity<Worker>('workers', null),
+                    department: mapRelatedEntity<Department>('departments', null),
+                    projects: {
+                        table: 'projects',
+                        entities: {
+                            [projectA.get('id') as number]: null,
+                            [projectB.get('id') as number]: null
+                        }
+                    }
+                }
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(setWorker({
+            ...worker,
+            projects: {
+                table: 'projects',
+                entities: {
+                    [projectA.get('id') as number]: null,
+                    [projectB.get('id') as number]: null
+                }
+            }
+        }));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(1);
+    });
+
+    it('create with related entity', async () => {
+        await database.model(table).create(boss);
+        expect(await database.model(table).count()).toBe(1);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.SET_ENTITY,
+                table,
+                entity: {
+                    ...worker,
+                    boss: {
+                        table: 'workers',
+                        id: boss.id,
+                        entity: null
+                    },
+                    department: mapRelatedEntity<Department>('departments', null),
+                    projects: mapRelatedEntities<Project>('projects', null)
+                }
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(createWorker({
+            ...worker,
+            boss: {
+                table: 'workers',
+                id: boss.id,
+                entity: null
+            }
+        }));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        const result = await database.model(table).findByPk(1);
+        expect(result.get('bossId')).toBe(2);
+
+        expect(await database.model(table).count()).toBe(2);
+    });
+
+    it('create with related entities', async () => {
+        const projectA = await database.model('projects').create({ name: 'Project A' });
+        const projectB = await database.model('projects').create({ name: 'Project B' });
+
+        expect(await database.model('projects').count()).toBe(2);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.SET_ENTITY,
+                table,
+                entity: {
+                    ...worker,
+                    boss: mapRelatedEntity<Worker>('workers', null),
+                    department: mapRelatedEntity<Department>('departments', null),
+                    projects: {
+                        table: 'projects',
+                        entities: {
+                            [projectA.get('id') as number]: null,
+                            [projectB.get('id') as number]: null
+                        }
+                    }
+                }
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(createWorker({
+            ...worker,
+            projects: {
+                table: 'projects',
+                entities: {
+                    [projectA.get('id') as number]: null,
+                    [projectB.get('id') as number]: null
+                }
+            }
+        }));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(1);
     });
 });
 

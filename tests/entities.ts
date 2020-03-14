@@ -26,42 +26,78 @@
  * SOFTWARE.
  */
 
-import { Entity } from '../lib';
+import { Entity, RelatedEntity, RelatedEntities, mapRelatedEntities, mapRelatedEntity, Includeable } from '../lib';
 import { Model } from 'sequelize';
 
-export interface Worker extends Entity {
+interface WorkerModel extends Entity {
     name: string;
     workId: number;
+
+    projects: RelatedEntities<Project>;
+    department: RelatedEntity<Department>;
+    boss: RelatedEntity<Worker>;
 }
+
+export type Worker = Partial<WorkerModel>;
 
 export function toWorker(data: Model): Worker {
     return {
         id: data.get('id') as number,
         name: data.get('name') as string,
-        workId: data.get('workId') as number
+        workId: data.get('workId') as number,
+
+        projects: mapRelatedEntities<Project>('projects', data.get('projects') as Project[]),
+        department: mapRelatedEntity<Department>('departments', data.get('department') as Department),
+        boss: mapRelatedEntity<Worker>('workers', data.get('boss') as Worker)
     };
 }
 
-export interface Project extends Entity {
+export const workerInclude: Includeable[] = [
+    { table: 'projects', key: 'projects' },
+    { table: 'departments', key: 'department' },
+    { table: 'workers', key: 'boss' }
+];
+
+interface ProjectModel extends Entity {
     name: string;
+
+    workers: RelatedEntities<Worker>;
 }
+
+export type Project = Partial<ProjectModel>;
 
 export function toProject(data: Model): Project {
     return {
         id: data.get('id') as number,
-        name: data.get('name') as string
+        name: data.get('name') as string,
+
+        workers: mapRelatedEntities<Worker>('workers', data.get('workers') as Worker[])
     };
 }
 
-export interface Department extends Entity {
+export const projectInclude: Includeable[] = [
+    { table: 'workers', key: 'workers' }
+];
+
+interface DepartmentModel extends Entity {
     name: string;
     floor: number;
+
+    workers: RelatedEntities<Worker>;
 }
+
+export type Department = Partial<DepartmentModel>;
 
 export function toDepartment(data: Model): Department {
     return {
         id: data.get('id') as number,
         name: data.get('name') as string,
-        floor: data.get('floor') as number
+        floor: data.get('floor') as number,
+
+        workers: mapRelatedEntities<Worker>('workers', data.get('workers') as Worker[])
     };
 }
+
+export const departmentInclude: Includeable[] = [
+    { table: 'workers', key: 'workers' }
+];

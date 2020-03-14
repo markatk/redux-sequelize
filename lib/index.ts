@@ -31,5 +31,18 @@ import middleware from './middleware';
 import reducer from './reducer';
 import * as Events from './events';
 import { createActions } from './actions';
+import { mapRelatedEntity, mapRelatedEntities } from './helpers';
 
-export { middleware, reducer, Entity, RelatedEntity, RelatedEntities, Events, Includeable, ToEntity, createActions };
+export {
+    middleware,
+    reducer,
+    Entity,
+    RelatedEntity,
+    RelatedEntities,
+    Events,
+    Includeable,
+    ToEntity,
+    createActions,
+    mapRelatedEntity,
+    mapRelatedEntities
+};

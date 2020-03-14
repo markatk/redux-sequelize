@@ -43,11 +43,11 @@ export interface Includeable {
 
 export interface RelatedEntity<T extends Entity> {
     table: string;
-    id: number;
-    entity: T;
+    id: number | null;
+    entity: T | null;
 }
 
 export interface RelatedEntities<T extends Entity> {
     table: string;
-    entities: {[id: number]: T};
+    entities: {[id: number]: T | null};
 }

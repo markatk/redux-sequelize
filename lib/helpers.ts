@@ -26,9 +26,9 @@
  * SOFTWARE.
  */
 
-import { Includeable as SequelizeIncludeable, Sequelize } from 'sequelize';
+import { Includeable as SequelizeIncludeable, Sequelize, Model } from 'sequelize';
 
-import { Includeable } from './types';
+import { Includeable, Entity, RelatedEntity, RelatedEntities } from './types';
 
 export function isRelatedEntity(value: {[key: string]: any}): boolean {
     if (value instanceof Object === false) {
@@ -60,4 +60,28 @@ export function includeablesToSequelizeInclude(sequelize: Sequelize, includeable
         model: sequelize.model(includeable.table),
         attributes: includeable.toEntity == null ? ['id'] : undefined
     }));
+}
+
+export function mapRelatedEntity<T extends Entity>(table: string, data: T): RelatedEntity<T> {
+    return {
+        table,
+        id: data != null ? data.get('id') as number : null,
+        entity: null
+    };
+}
+
+export function mapRelatedEntities<T extends Entity>(table: string, data: T[]): RelatedEntities<T> {
+    let entities = {};
+    if (data != null) {
+        entities = data.reduce((ent: {[id: number]: T | null}, entity: T) => {
+            ent[entity.get('id') as number] = null;
+
+            return ent;
+        }, {});
+    }
+
+    return {
+        table,
+        entities
+    };
 }

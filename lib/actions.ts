@@ -27,7 +27,7 @@
  */
 
 import { Dispatch } from 'redux';
-import { Sequelize, WhereOptions } from 'sequelize';
+import { Sequelize, WhereOptions, Model } from 'sequelize';
 
 import * as Events from './events';
 import { Entity, Includeable, ToEntity } from './types';
@@ -87,9 +87,45 @@ export function createActions<T extends Entity>(sequelize: Sequelize, table: str
 
                 try {
                     const model = sequelize.model(table);
-                    const entity = model.build(data);
 
-                    await entity.save();
+                    // create entity and search for it to include related objects
+                    let entity = await model.create(data);
+                    entity = await model.findByPk(entity.get('id') as number, { include: includeablesToSequelizeInclude(sequelize, include) }) as Model;
+
+                    // set related entities
+                    let changed = false;
+
+                    for (const includeable of include) {
+                        const related = data[includeable.key];
+                        if (related == null) {
+                            continue;
+                        }
+
+                        // update keys for each association
+                        const association = model.associations[includeable.key] as any;
+
+                        if (association.isMultiAssociation) {
+                            // set external relation
+                            entity.set(includeable.key as any, Object.keys(related.entities).map(id => ({ id })));
+
+                            // set internal relation
+                            const keys = Object.keys(related.entities);
+
+                            await association.set(entity, keys);
+                        } else {
+                            // set external relation
+                            entity.set(includeable.key as any, data[includeable.key]);
+
+                            // set internal relation
+                            await association.set(entity, related.id);
+                        }
+
+                        changed = true;
+                    }
+
+                    if (changed) {
+                        await entity.save();
+                    }
 
                     dispatch(setEntity<T>(table, toEntity(entity)));
                 } catch (err) {
@@ -137,7 +173,7 @@ export function createActions<T extends Entity>(sequelize: Sequelize, table: str
 
                 try {
                     const model = sequelize.model(table);
-                    const entity = await model.findByPk(data.id);
+                    const entity = await model.findByPk(data.id, { include: includeablesToSequelizeInclude(sequelize, include) });
                     if (entity == null) {
                         dispatch(updatingEntitiesFailed(table, 'get', 'Entity not found', data));
 
@@ -146,8 +182,35 @@ export function createActions<T extends Entity>(sequelize: Sequelize, table: str
 
                     // apply changes
                     for (const key in data) {
-                        if (data.hasOwnProperty(key)) {
+                        if (data.hasOwnProperty(key) && include.some(includeable => includeable.key === key) === false) {
                             entity.set(key as any, data[key]);
+                        }
+                    }
+
+                    // update related entities
+                    for (const includeable of include) {
+                        const related = data[includeable.key];
+                        if (related == null) {
+                            continue;
+                        }
+
+                        // update keys for each association
+                        const association = model.associations[includeable.key] as any;
+
+                        if (association.isMultiAssociation) {
+                            // set external relation
+                            entity.set(includeable.key as any, Object.keys(related.entities).map(id => ({ id })));
+
+                            // set internal relation
+                            const keys = Object.keys(related.entities);
+
+                            await association.set(entity, keys);
+                        } else {
+                            // set external relation
+                            entity.set(includeable.key as any, data[includeable.key]);
+
+                            // set internal relation
+                            await association.set(entity, related.id);
                         }
                     }
 

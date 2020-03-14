@@ -26,7 +26,46 @@
  * SOFTWARE.
  */
 
-import { Sequelize, DataTypes } from 'sequelize';
+import { Sequelize, DataTypes, Model, Association } from 'sequelize';
+
+class Worker extends Model {
+    public id: number;
+    public name: string;
+    public workId: number;
+
+    public readonly projects?: Project[];
+    public readonly department?: Department[];
+    public readonly boss?: Worker;
+
+    public static associations: {
+        projects: Association<Worker, Project>;
+        department: Association<Worker, Department>;
+        boss: Association<Worker, Worker>;
+    };
+}
+
+class Project extends Model {
+    public id: number;
+    public name: string;
+
+    public readonly workers: Worker[];
+
+    public static associations: {
+        workers: Association<Project, Worker>;
+    };
+}
+
+class Department extends Model {
+    public id: number;
+    public name: string;
+    public floor: number;
+
+    public readonly workers: Worker[];
+
+    public static associations: {
+        workers: Association<Department, Worker>;
+    }
+}
 
 export default function createDatabase(): Sequelize {
     const sequelize = new Sequelize({
@@ -34,19 +73,36 @@ export default function createDatabase(): Sequelize {
         dialect: 'sqlite'
     });
 
-    sequelize.define('workers', {
+    Worker.init({
         name: DataTypes.STRING,
         workId: DataTypes.NUMBER
-    }, {});
-
-    sequelize.define('projects', {
-        name: DataTypes.STRING
+    }, {
+        sequelize,
+        modelName: 'workers'
     });
 
-    sequelize.define('departments', {
+    Project.init({
+        name: DataTypes.STRING
+    }, {
+        sequelize,
+        modelName: 'projects'
+    });
+
+    Department.init({
         name: DataTypes.STRING,
         floor: DataTypes.NUMBER
+    }, {
+        sequelize,
+        modelName: 'departments'
     });
+
+    Worker.belongsToMany(Project, { as: 'projects', through: 'WorkerProject', foreignKey: 'workerId' });
+    Worker.belongsTo(Department, { as: 'department' });
+    Worker.belongsTo(Worker, { as: 'boss' });
+
+    Project.belongsToMany(Worker, { as: 'workers', through: 'WorkerProject', foreignKey: 'projectId' });
+
+    Department.hasMany(Worker, { as: 'workers' });
 
     return sequelize;
 }
