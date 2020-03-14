@@ -29,7 +29,7 @@
 import { Reducer } from 'redux';
 
 import { reducer, Events } from '../lib';
-import { updateEntities, updatingEntitiesFailed } from '../lib/actions';
+import { updateEntities, updatingEntitiesFailed, setEntity, setEntities, deleteEntity } from '../lib/actions';
 import { Worker } from './entities';
 
 const initialState = {
@@ -64,10 +64,228 @@ describe('entity reducer', () => {
     });
 
     it('updating failed decreases counter', () => {
-        expect(workerReducer(undefined, updatingEntitiesFailed(table, null, null))).toEqual({
-            updating: -1,
+        expect(workerReducer({
+            updating: 1,
             data: {},
             relatedTables: []
+        }, updatingEntitiesFailed(table, null, null))).toEqual({
+            updating: 0,
+            data: {},
+            relatedTables: []
+        });
+    });
+
+    it('set entity action', () => {
+        const worker = {
+            id: 1,
+            name: 'Thomas',
+            workId: 55,
+            boss: {
+                table: 'workers',
+                id: null,
+                entity: null
+            },
+            department: {
+                table: 'departments',
+                id: null,
+                entity: null
+            },
+            projects: {
+                table: 'projects',
+                entities: {}
+            }
+        };
+
+        expect(workerReducer({
+            updating: 1,
+            data: {},
+            relatedTables: []
+        }, setEntity(table, worker))).toEqual({
+            updating: 0,
+            data: {
+                [worker.id]: worker
+            },
+            relatedTables: [ 'workers', 'departments', 'projects' ]
+        });
+    });
+
+    it('set entity action overwrite existing entity', () => {
+        const worker = {
+            id: 1,
+            name: 'Thomas',
+            workId: 55,
+            boss: {
+                table: 'workers',
+                id: null,
+                entity: null
+            },
+            department: {
+                table: 'departments',
+                id: null,
+                entity: null
+            },
+            projects: {
+                table: 'projects',
+                entities: {}
+            }
+        };
+
+        expect(workerReducer({
+            updating: 1,
+            data: {
+                [worker.id]: {
+                    ...worker,
+                    name: 'Mike',
+                    workId: 3
+                }
+            },
+            relatedTables: []
+        }, setEntity(table, worker))).toEqual({
+            updating: 0,
+            data: {
+                [worker.id]: worker
+            },
+            relatedTables: [ 'workers', 'departments', 'projects' ]
+        });
+    });
+
+    it('set entities action', () => {
+        const workers = [
+            {
+                id: 1,
+                name: 'Thomas',
+                workId: 55,
+                boss: {
+                    table: 'workers',
+                    id: null,
+                    entity: null
+                },
+                department: {
+                    table: 'departments',
+                    id: null,
+                    entity: null
+                },
+                projects: {
+                    table: 'projects',
+                    entities: {}
+                }
+            },
+            {
+                id: 2,
+                name: 'Mike',
+                workId: 3,
+                boss: {
+                    table: 'workers',
+                    id: null,
+                    entity: null
+                },
+                department: {
+                    table: 'departments',
+                    id: null,
+                    entity: null
+                },
+                projects: {
+                    table: 'projects',
+                    entities: {}
+                }
+            }
+        ];
+
+        expect(workerReducer({
+            updating: 1,
+            data: {},
+            relatedTables: []
+        }, setEntities(table, workers))).toEqual({
+            updating: 0,
+            data: {
+                [workers[0].id]: workers[0],
+                [workers[1].id]: workers[1]
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        });
+    });
+
+    it('delete entity action', () => {
+        expect(workerReducer({
+            updating: 1,
+            data: {
+                [1]: {
+                    id: 1,
+                    name: 'Thomas',
+                    workId: 55,
+                    boss: {
+                        table: 'workers',
+                        id: null,
+                        entity: null
+                    },
+                    department: {
+                        table: 'departments',
+                        id: null,
+                        entity: null
+                    },
+                    projects: {
+                        table: 'projects',
+                        entities: {}
+                    }
+                }
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        }, deleteEntity(table, 1))).toEqual({
+            updating: 0,
+            data: {},
+            relatedTables: ['workers', 'departments', 'projects']
+        });
+    });
+
+    it('delete invalid entity', () => {
+        expect(workerReducer({
+            updating: 1,
+            data: {
+                [1]: {
+                    id: 1,
+                    name: 'Thomas',
+                    workId: 55,
+                    boss: {
+                        table: 'workers',
+                        id: null,
+                        entity: null
+                    },
+                    department: {
+                        table: 'departments',
+                        id: null,
+                        entity: null
+                    },
+                    projects: {
+                        table: 'projects',
+                        entities: {}
+                    }
+                }
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        }, deleteEntity(table, 2))).toEqual({
+            updating: 0,
+            data: {
+                [1]: {
+                    id: 1,
+                    name: 'Thomas',
+                    workId: 55,
+                    boss: {
+                        table: 'workers',
+                        id: null,
+                        entity: null
+                    },
+                    department: {
+                        table: 'departments',
+                        id: null,
+                        entity: null
+                    },
+                    projects: {
+                        table: 'projects',
+                        entities: {}
+                    }
+                }
+            },
+            relatedTables: ['workers', 'departments', 'projects']
         });
     });
 });
