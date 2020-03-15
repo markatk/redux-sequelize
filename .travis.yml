@@ -2,3 +2,7 @@ language: node_js
 node_js:
     - stable
 cache: yarn
+
+script:
+    - yarn run test
+    - if [ "$TRAVIS_BRANCH" = "master" ]; then yarn run coveralls; fi
