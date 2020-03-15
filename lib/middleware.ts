@@ -27,8 +27,58 @@
  */
 
 import { Middleware } from 'redux';
+import _ from 'lodash';
+
+import { SET_ENTITY, SET_ENTITIES } from './events';
+import { Entity } from './types';
+import { isRelatedEntity, isRelatedEntities } from './helpers';
+
+function updateEntity(state: any, entity: Entity) {
+    for (const key in entity) {
+        if (entity.hasOwnProperty(key) === false) {
+            continue;
+        }
+
+        if (isRelatedEntity(entity[key])) {
+            const related = entity[key];
+            if (related.id == null) {
+                continue;
+            }
+
+            related.entity = _.get(state, [related.table, 'data', related.id]);
+        } else if (isRelatedEntities(entity[key])) {
+            const related = entity[key];
+
+            for (const id in related.entities) {
+                if (related.entities.hasOwnProperty(id)) {
+                    related.entities[id] = _.get(state, [related.table, 'data', id]);
+                }
+            }
+        }
+    }
+}
 
 const middleware: Middleware = store => next => action => {
+    if ('type' in action === false) {
+        return next(action);
+    }
+
+    // update entities in action
+    const type = action.type;
+    if (type !== SET_ENTITY && type !== SET_ENTITIES) {
+        return next(action);
+    }
+
+    const state = store.getState();
+
+    if ('entities' in action) {
+        for (const entity of action.entities) {
+            updateEntity(state, entity);
+        }
+    } else {
+        updateEntity(state, action.entity);
+    }
+
     return next(action);
 };
 
