@@ -41,6 +41,60 @@ function getRelatedTables(currentTables: string[], entities: Entity[]): string[]
     );
 }
 
+function getEntityFromAction(action: any, id: number): Entity | null {
+    if (action.entity != null) {
+        return action.entity.id === id ? action.entity : null;
+    }
+
+    if (action.entities != null) {
+        return action.entities.find((entity: Entity) => entity.id === id);
+    }
+
+    return null;
+}
+
+function updateEntities<T extends Entity>(state: EntitiesState<T>, action: EntityActions<T>): EntitiesState<T> {
+    for (const id in state.data) {
+        if (state.data.hasOwnProperty(id) === false) {
+            continue;
+        }
+
+        const entity = state.data[id];
+
+        for (const key in entity) {
+            if (isRelatedEntity(entity[key])) {
+                const related = entity[key];
+                if (related.table !== action.table || related.id == null) {
+                    continue;
+                }
+
+                const relatedEntity = getEntityFromAction(action, related.id);
+                if (relatedEntity != null) {
+                    related.entity = relatedEntity;
+                }
+            } else if (isRelatedEntities(entity[key])) {
+                const related = entity[key];
+                if (related.table !== action.table) {
+                    continue;
+                }
+
+                for (const relatedId in related.entities) {
+                    if (related.entities.hasOwnProperty(relatedId) === false) {
+                        continue;
+                    }
+
+                    const relatedEntity = getEntityFromAction(action, parseInt(relatedId));
+                    if (relatedEntity != null) {
+                        related.entities[relatedId] = relatedEntity;
+                    }
+                }
+            }
+        }
+    }
+
+    return state;
+}
+
 interface EntitiesState<T extends Entity> {
     updating: number;
     data: {[id: number]: T};
@@ -56,7 +110,11 @@ const initialState = {
 export default function reducer<T extends Entity>(table: string) {
     return (state: EntitiesState<T> = initialState, action: EntityActions<T>): EntitiesState<T> => {
         if (action.table !== table) {
-            return state;
+            if (state.relatedTables.includes(action.table) === false) {
+                return state;
+            }
+
+            return updateEntities<T>(state, action);
         }
 
         switch (action.type) {

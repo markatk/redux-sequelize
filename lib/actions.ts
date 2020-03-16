@@ -27,7 +27,7 @@
  */
 
 import { Dispatch } from 'redux';
-import { Sequelize, WhereOptions, Model, TableHints } from 'sequelize';
+import { Sequelize, WhereOptions, Model } from 'sequelize';
 import _ from 'lodash';
 
 import * as Events from './events';
