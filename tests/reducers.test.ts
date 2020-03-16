@@ -624,4 +624,123 @@ describe('entity reducer', () => {
             relatedTables: ['workers', 'departments', 'projects']
         });
     });
+
+    it('delete related entity', () => {
+        expect(workerReducer({
+            updating: 0,
+            data: {
+                [1]: {
+                    id: 1,
+                    name: 'Thomas',
+                    workId: 55,
+                    boss: {
+                        table: 'workers',
+                        id: null,
+                        entity: null
+                    },
+                    department: {
+                        table: 'departments',
+                        id: 1,
+                        entity: {
+                            id: 1,
+                            name: 'Development'
+                        }
+                    },
+                    projects: {
+                        table: 'projects',
+                        entities: {}
+                    }
+                }
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        }, deleteEntity('departments', 1))).toEqual({
+            updating: 0,
+            data: {
+                [1]: {
+                    id: 1,
+                    name: 'Thomas',
+                    workId: 55,
+                    boss: {
+                        table: 'workers',
+                        id: null,
+                        entity: null
+                    },
+                    department: {
+                        table: 'departments',
+                        id: null,
+                        entity: null
+                    },
+                    projects: {
+                        table: 'projects',
+                        entities: {}
+                    }
+                }
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        });
+
+        expect(workerReducer({
+            updating: 0,
+            data: {
+                [1]: {
+                    id: 1,
+                    name: 'Thomas',
+                    workId: 55,
+                    boss: {
+                        table: 'workers',
+                        id: null,
+                        entity: null
+                    },
+                    department: {
+                        table: 'departments',
+                        id: null,
+                        entity: null
+                    },
+                    projects: {
+                        table: 'projects',
+                        entities: {
+                            [1]: {
+                                id: 1,
+                                name: 'Project Deep'
+                            },
+                            [2]: {
+                                id: 2,
+                                name: 'Project Unknown'
+                            }
+                        }
+                    }
+                }
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        }, deleteEntity('projects', 1))).toEqual({
+            updating: 0,
+            data: {
+                [1]: {
+                    id: 1,
+                    name: 'Thomas',
+                    workId: 55,
+                    boss: {
+                        table: 'workers',
+                        id: null,
+                        entity: null
+                    },
+                    department: {
+                        table: 'departments',
+                        id: null,
+                        entity: null
+                    },
+                    projects: {
+                        table: 'projects',
+                        entities: {
+                            [2]: {
+                                id: 2,
+                                name: 'Project Unknown'
+                            }
+                        }
+                    }
+                }
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        });
+    });
 });

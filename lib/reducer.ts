@@ -28,7 +28,7 @@
 
 import _ from 'lodash';
 
-import { UPDATING_ENTITIES, UPDATING_ENTITIES_FAILED, SET_ENTITY, SET_ENTITIES, DELETE_ENTITY, EntityActions } from './events';
+import { UPDATING_ENTITIES, UPDATING_ENTITIES_FAILED, SET_ENTITY, SET_ENTITIES, DELETE_ENTITY, EntityActions, DeleteEntityAction } from './events';
 import { Entity } from './types';
 import { isRelatedEntities, isRelatedEntity } from './helpers';
 
@@ -95,6 +95,43 @@ function updateEntities<T extends Entity>(state: EntitiesState<T>, action: Entit
     return state;
 }
 
+function updateDeletedEntity<T extends Entity>(state: EntitiesState<T>, action: DeleteEntityAction): EntitiesState<T> {
+    for (const id in state.data) {
+        if (state.data.hasOwnProperty(id) === false) {
+            continue;
+        }
+
+        const entity = state.data[id];
+
+        for (const key in entity) {
+            if (isRelatedEntity(entity[key])) {
+                const related = entity[key];
+                if (related.table !== action.table || related.id !== action.id) {
+                    continue;
+                }
+
+                related.entity = null;
+                related.id = null;
+            } else if (isRelatedEntities(entity[key])) {
+                const related = entity[key];
+                if (related.table !== action.table) {
+                    continue;
+                }
+
+                for (const relatedId in related.entities) {
+                    if (related.entities.hasOwnProperty(relatedId) === false || parseInt(relatedId) !== action.id) {
+                        continue;
+                    }
+
+                    delete related.entities[relatedId];
+                }
+            }
+        }
+    }
+
+    return state;
+}
+
 interface EntitiesState<T extends Entity> {
     updating: number;
     data: {[id: number]: T};
@@ -109,8 +146,18 @@ const initialState = {
 
 export default function reducer<T extends Entity>(table: string) {
     return (state: EntitiesState<T> = initialState, action: EntityActions<T>): EntitiesState<T> => {
+        // update existing entities' relations
         if (action.table !== table) {
             if (state.relatedTables.includes(action.table) === false) {
+                return state;
+            }
+
+            const type = action.type;
+            if (type === DELETE_ENTITY) {
+                return updateDeletedEntity<T>(state, action as DeleteEntityAction);
+            }
+
+            if (type !== SET_ENTITY && type !== SET_ENTITIES) {
                 return state;
             }
 
