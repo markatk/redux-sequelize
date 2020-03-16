@@ -135,4 +135,102 @@ describe('middleware', () => {
             }
         });
     });
+
+    it('handle multiple entity action', () => {
+        const boss = {
+            id: 1,
+            name: 'Mike',
+            workId: 3,
+            boss: {
+                table: 'workers',
+                id: null,
+                entity: null
+            },
+            department: {
+                table: 'departments',
+                id: null,
+                entity: null
+            },
+            projects: {
+                table: 'projects',
+                entities: {}
+            }
+        };
+
+        const state = {
+            workers: {
+                updating: 0,
+                data: {
+                    [boss.id]: boss
+                },
+                relatedTables: ['workers', 'departments', 'projects']
+            }
+        };
+
+        const worker1 = {
+            id: 2,
+            name: 'Thomas',
+            workId: 55,
+            boss: {
+                table: 'workers',
+                id: boss.id,
+                entity: null
+            },
+            department: {
+                table: 'departments',
+                id: null,
+                entity: null
+            },
+            projects: {
+                table: 'projects',
+                entities: {}
+            }
+        };
+
+        const worker2 = {
+            id: 3,
+            name: 'Steven',
+            workId: 67,
+            boss: {
+                table: 'workers',
+                id: boss.id,
+                entity: null
+            },
+            department: {
+                table: 'departments',
+                id: null,
+                entity: null
+            },
+            projects: {
+                table: 'projects',
+                entities: {}
+            }
+        }
+
+        const { next, invoke } = create(state);
+        const action = setEntities('workers', [worker1, worker2]);
+
+        invoke(action);
+        expect(next).toHaveBeenCalledWith(action);
+
+        expect(action).toEqual({
+            ...setEntities('workers', [worker1, worker2]),
+            entities: [
+                {
+                    ...worker1,
+                    boss: {
+                        ...worker1.boss,
+                        entity: boss
+                    }
+                },
+                {
+                    ...worker2,
+                    boss: {
+                        ...worker2.boss,
+                        entity: boss
+                    }
+                }
+            ]
+        });
+    });
 });

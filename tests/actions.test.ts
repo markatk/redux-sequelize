@@ -31,7 +31,7 @@ import thunk from 'redux-thunk';
 
 import { createActions, Events, mapRelatedEntity, mapRelatedEntities } from '../lib';
 import { updateEntities, updatingEntitiesFailed, setEntity, setEntities, deleteEntity } from '../lib/actions';
-import { Worker, toWorker, Department, Project, workerInclude } from './entities';
+import { Worker, toWorker, Department, Project, workerInclude, toProject } from './entities';
 import createDatabase from './database';
 
 const table = 'workers';
@@ -189,7 +189,7 @@ describe('entity actions', () => {
         expect(store.getActions()).toEqual(expectedActions);
     });
 
-    it('update entity', async () => {
+    it('update valid entity', async () => {
         await database.model(table).create(worker);
         expect(await database.model(table).count()).toBe(1);
 
@@ -214,7 +214,40 @@ describe('entity actions', () => {
         const store = mockStore();
 
         await store.dispatch(setWorker({
-            id: 1,
+            id: worker.id,
+            name: 'Mike'
+        }));
+
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(1);
+    });
+
+    it('update invalid entity', async () => {
+        await database.model(table).create(worker);
+        expect(await database.model(table).count()).toBe(1);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.UPDATING_ENTITIES_FAILED,
+                table,
+                action: 'set',
+                message: 'Entity not found',
+                data: {
+                    id: worker.id + 5,
+                    name: 'Mike'
+                }
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(setWorker({
+            id: worker.id + 5,
             name: 'Mike'
         }));
 
@@ -324,7 +357,119 @@ describe('entity actions', () => {
         expect(store.getActions()).toEqual(expectedActions);
 
         expect(await database.model(table).count()).toBe(1);
+    });
 
+    it('get multiple entities', async () => {
+        const workerEntity = await database.model(table).create(worker);
+        const bossEntity = await database.model(table).create(boss);
+        expect(await database.model(table).count()).toBe(2);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.UPDATING_ENTITIES,
+                table: 'workers'
+            },
+            {
+                type: Events.SET_ENTITIES,
+                table: 'workers',
+                entities: []
+            },
+            {
+                type: Events.SET_ENTITIES,
+                table,
+                entities: [
+                    {
+                        ...worker,
+                        boss: mapRelatedEntity<Department>('workers', null),
+                        department: mapRelatedEntity<Department>('departments', null),
+                        projects: mapRelatedEntities<Project>('projects', null)
+                    },
+                    {
+                        ...boss,
+                        boss: mapRelatedEntity<Department>('workers', null),
+                        department: mapRelatedEntity<Department>('departments', null),
+                        projects: mapRelatedEntities<Project>('projects', null)
+                    }
+                ]
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(getWorkers());
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(2);
+    });
+
+    it('get multiple entities with related entity', async () => {
+        const projectA = await database.model('projects').create({ name: 'Project A' });
+        const projectB = await database.model('projects').create({ name: 'Project B' });
+
+        const workerEntity = await database.model(table).create(worker);
+        const bossEntity = await database.model(table).create(boss);
+
+        const association = database.model(table).associations.projects as any;
+        await association.set(workerEntity, [projectA.get('id') as number]);
+        await association.set(bossEntity, [projectB.get('id') as number]);
+
+        expect(await database.model(table).count()).toBe(2);
+        expect(await database.model('projects').count()).toBe(2);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.UPDATING_ENTITIES,
+                table: 'workers'
+            },
+            {
+                type: Events.SET_ENTITIES,
+                table: 'workers',
+                entities: []
+            },
+            {
+                type: Events.SET_ENTITIES,
+                table,
+                entities: [
+                    {
+                        ...worker,
+                        boss: mapRelatedEntity<Department>('workers', null),
+                        department: mapRelatedEntity<Department>('departments', null),
+                        projects: {
+                            table: 'projects',
+                            entities: {
+                                [projectA.get('id') as number]: null
+                            }
+                        }
+                    },
+                    {
+                        ...boss,
+                        boss: mapRelatedEntity<Department>('workers', null),
+                        department: mapRelatedEntity<Department>('departments', null),
+                        projects: {
+                            table: 'projects',
+                            entities: {
+                                [projectB.get('id') as number]: null
+                            }
+                        }
+                    }
+                ]
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(getWorkers());
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(2);
     });
 
     it('set related entity', async () => {
@@ -503,6 +648,56 @@ describe('entity actions', () => {
                 }
             }
         }));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(1);
+    });
+
+    it('delete valid entity', async () => {
+        await database.model(table).create(worker);
+        expect(await database.model(table).count()).toBe(1);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.DELETE_ENTITY,
+                table,
+                id: worker.id
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(deleteWorker(worker.id));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(0);
+    });
+
+    it('delete invalid entity', async () => {
+        await database.model(table).create(worker);
+        expect(await database.model(table).count()).toBe(1);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.UPDATING_ENTITIES_FAILED,
+                table,
+                action: 'delete',
+                message: 'Entity not found',
+                data: worker.id + 5
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(deleteWorker(worker.id + 5));
         expect(store.getActions()).toEqual(expectedActions);
 
         expect(await database.model(table).count()).toBe(1);

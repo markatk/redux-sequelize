@@ -197,7 +197,7 @@ export function createActions<T extends Entity>(sequelize: Sequelize, table: str
                 }
             }
         },
-        getEntities: (where: WhereOptions) => {
+        getEntities: (where: WhereOptions = {}) => {
             return async (dispatch: Dispatch<Events.EntityActions<T>>) => {
                 dispatch(updateEntities(table));
 
@@ -222,7 +222,7 @@ export function createActions<T extends Entity>(sequelize: Sequelize, table: str
                     const model = sequelize.model(table);
                     const entity = await model.findByPk(data.id, { include: includeablesToSequelizeInclude(sequelize, include) });
                     if (entity == null) {
-                        dispatch(updatingEntitiesFailed(table, 'get', 'Entity not found', data));
+                        dispatch(updatingEntitiesFailed(table, 'set', 'Entity not found', data));
 
                         return;
                     }
