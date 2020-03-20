@@ -288,7 +288,8 @@ describe('entity actions', () => {
                     boss: {
                         table: 'workers',
                         id: boss.id,
-                        entity: null
+                        entity: null,
+                        linkedKey: null
                     },
                     department: mapRelatedEntity<Department>('departments', null),
                     projects: mapRelatedEntities<Project>('projects', null)
@@ -345,7 +346,8 @@ describe('entity actions', () => {
                         entities: {
                             [projectA.get('id') as number]: null,
                             [projectB.get('id') as number]: null
-                        }
+                        },
+                        linkedKey: null
                     }
                 }
             }
@@ -446,7 +448,8 @@ describe('entity actions', () => {
                             table: 'projects',
                             entities: {
                                 [projectA.get('id') as number]: null
-                            }
+                            },
+                            linkedKey: null
                         }
                     },
                     {
@@ -457,7 +460,8 @@ describe('entity actions', () => {
                             table: 'projects',
                             entities: {
                                 [projectB.get('id') as number]: null
-                            }
+                            },
+                            linkedKey: null
                         }
                     }
                 ]
@@ -490,7 +494,8 @@ describe('entity actions', () => {
                     boss: {
                         table: 'workers',
                         id: boss.id,
-                        entity: null
+                        entity: null,
+                        linkedKey: null
                     },
                     department: mapRelatedEntity<Department>('departments', null),
                     projects: mapRelatedEntities<Project>('projects', null)
@@ -505,7 +510,8 @@ describe('entity actions', () => {
             boss: {
                 table: 'workers',
                 id: boss.id,
-                entity: null
+                entity: null,
+                linkedKey: null
             }
         }));
         expect(store.getActions()).toEqual(expectedActions);
@@ -541,7 +547,8 @@ describe('entity actions', () => {
                         entities: {
                             [projectA.get('id') as number]: null,
                             [projectB.get('id') as number]: null
-                        }
+                        },
+                        linkedKey: null
                     }
                 }
             }
@@ -556,7 +563,8 @@ describe('entity actions', () => {
                 entities: {
                     [projectA.get('id') as number]: null,
                     [projectB.get('id') as number]: null
-                }
+                },
+                linkedKey: null
             }
         }));
         expect(store.getActions()).toEqual(expectedActions);
@@ -581,7 +589,8 @@ describe('entity actions', () => {
                     boss: {
                         table: 'workers',
                         id: boss.id,
-                        entity: null
+                        entity: null,
+                        linkedKey: null
                     },
                     department: mapRelatedEntity<Department>('departments', null),
                     projects: mapRelatedEntities<Project>('projects', null)
@@ -596,7 +605,8 @@ describe('entity actions', () => {
             boss: {
                 table: 'workers',
                 id: boss.id,
-                entity: null
+                entity: null,
+                linkedKey: null
             }
         }));
         expect(store.getActions()).toEqual(expectedActions);
@@ -630,7 +640,8 @@ describe('entity actions', () => {
                         entities: {
                             [projectA.get('id') as number]: null,
                             [projectB.get('id') as number]: null
-                        }
+                        },
+                        linkedKey: null
                     }
                 }
             }
@@ -645,7 +656,8 @@ describe('entity actions', () => {
                 entities: {
                     [projectA.get('id') as number]: null,
                     [projectB.get('id') as number]: null
-                }
+                },
+                linkedKey: null
             }
         }));
         expect(store.getActions()).toEqual(expectedActions);

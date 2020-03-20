@@ -72,15 +72,16 @@ export function includeablesToEntityStore(includeables: Includeable[]): {[table:
         }, {});
 }
 
-export function mapRelatedEntity<T extends Entity>(table: string, data: T): RelatedEntity<T> {
+export function mapRelatedEntity<T extends Entity>(table: string, data: T, linkedKey: string | null = null): RelatedEntity<T> {
     return {
         table,
         id: data != null ? data.get('id') as number : null,
-        entity: null
+        entity: null,
+        linkedKey
     };
 }
 
-export function mapRelatedEntities<T extends Entity>(table: string, data: T[]): RelatedEntities<T> {
+export function mapRelatedEntities<T extends Entity>(table: string, data: T[], linkedKey: string | null = null): RelatedEntities<T> {
     let entities = {};
     if (data != null) {
         entities = data.reduce((ent: {[id: number]: T | null}, entity: T) => {
@@ -92,6 +93,7 @@ export function mapRelatedEntities<T extends Entity>(table: string, data: T[]): 
 
     return {
         table,
-        entities
+        entities,
+        linkedKey
     };
 }

@@ -39,15 +39,18 @@ export interface Includeable {
     table: string;
     key: string;
     toEntity?: ToEntity<Entity>;
+    linkedKey?: string
 }
 
 export interface RelatedEntity<T extends Entity> {
     table: string;
     id: number | null;
     entity: T | null;
+    linkedKey: string | null;
 }
 
 export interface RelatedEntities<T extends Entity> {
     table: string;
     entities: {[id: number]: T | null};
+    linkedKey: string | null;
 }

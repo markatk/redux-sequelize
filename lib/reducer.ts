@@ -28,7 +28,7 @@
 
 import _ from 'lodash';
 
-import { UPDATING_ENTITIES, UPDATING_ENTITIES_FAILED, SET_ENTITY, SET_ENTITIES, DELETE_ENTITY, EntityActions, DeleteEntityAction } from './events';
+import * as Events from './events';
 import { Entity } from './types';
 import { isRelatedEntities, isRelatedEntity } from './helpers';
 
@@ -53,7 +53,7 @@ function getEntityFromAction(action: any, id: number): Entity | null {
     return null;
 }
 
-function updateEntities<T extends Entity>(state: EntitiesState<T>, action: EntityActions<T>): EntitiesState<T> {
+function updateEntities<T extends Entity>(state: EntitiesState<T>, action: Events.EntityActions<T>): EntitiesState<T> {
     for (const id in state.data) {
         if (state.data.hasOwnProperty(id) === false) {
             continue;
@@ -95,7 +95,7 @@ function updateEntities<T extends Entity>(state: EntitiesState<T>, action: Entit
     return state;
 }
 
-function updateDeletedEntity<T extends Entity>(state: EntitiesState<T>, action: DeleteEntityAction): EntitiesState<T> {
+function updateDeletedEntity<T extends Entity>(state: EntitiesState<T>, action: Events.DeleteEntityAction): EntitiesState<T> {
     for (const id in state.data) {
         if (state.data.hasOwnProperty(id) === false) {
             continue;
@@ -132,6 +132,48 @@ function updateDeletedEntity<T extends Entity>(state: EntitiesState<T>, action: 
     return state;
 }
 
+function updateRelatedEntity<T extends Entity>(state: EntitiesState<T>, entity: Entity): EntitiesState<T> {
+    for (const key in entity) {
+        if (isRelatedEntity(entity[key])) {
+            const related = entity[key];
+            if (related.entity == null || related.linkedKey == null) {
+                continue;
+            }
+
+            const linkedRelated = related.entity[related.linkedKey];
+
+            if (isRelatedEntity(linkedRelated)) {
+                linkedRelated.id = entity.id;
+                linkedRelated.entity = entity;
+            } else if (isRelatedEntities(linkedRelated)) {
+                linkedRelated.entities[entity.id as number] = entity;
+            }
+        } else if (isRelatedEntities(entity[key])) {
+            const related = entity[key];
+            if (related.linkedKey == null) {
+                continue;
+            }
+
+            for (const relatedId in related.entities) {
+                if (related.entities.hasOwnProperty(relatedId) === false || related.entities[relatedId] == null) {
+                    continue;
+                }
+
+                const linkedRelated = related.entities[relatedId][related.linkedKey];
+
+                if (isRelatedEntity(linkedRelated)) {
+                    linkedRelated.id = entity.id;
+                    linkedRelated.entity = entity;
+                } else if (isRelatedEntities(linkedRelated)) {
+                    linkedRelated.entities[entity.id as number] = entity;
+                }
+            }
+        }
+    }
+
+    return state;
+}
+
 interface EntitiesState<T extends Entity> {
     updating: number;
     data: {[id: number]: T};
@@ -145,7 +187,7 @@ const initialState = {
 };
 
 export default function reducer<T extends Entity>(table: string) {
-    return (state: EntitiesState<T> = initialState, action: EntityActions<T>): EntitiesState<T> => {
+    return (state: EntitiesState<T> = initialState, action: Events.EntityActions<T>): EntitiesState<T> => {
         // update existing entities' relations
         if (action.table !== table) {
             if (state.relatedTables.includes(action.table) === false) {
@@ -153,32 +195,45 @@ export default function reducer<T extends Entity>(table: string) {
             }
 
             const type = action.type;
-            if (type === DELETE_ENTITY) {
-                return updateDeletedEntity<T>(state, action as DeleteEntityAction);
+            if (type === Events.DELETE_ENTITY) {
+                return updateDeletedEntity<T>(state, action as Events.DeleteEntityAction);
             }
 
-            if (type !== SET_ENTITY && type !== SET_ENTITIES) {
+            if (type !== Events.SET_ENTITY && type !== Events.SET_ENTITIES) {
                 return state;
+            }
+
+            if (type === Events.SET_ENTITIES) {
+                const entities = (action as Events.SetEntitiesAction<Entity>).entities;
+
+                for (const id in entities) {
+                    if (entities.hasOwnProperty(id)) {
+                        state = updateRelatedEntity<T>(state, entities[id]);
+                    }
+                }
+            } else {
+                const entity = (action as Events.SetEntityAction<Entity>).entity;
+                state = updateRelatedEntity<T>(state, entity);
             }
 
             return updateEntities<T>(state, action);
         }
 
         switch (action.type) {
-            case UPDATING_ENTITIES:
+            case Events.UPDATING_ENTITIES:
                 return {
                     ...state,
                     updating: state.updating + 1
                 };
 
-            case UPDATING_ENTITIES_FAILED:
+            case Events.UPDATING_ENTITIES_FAILED:
                 // TODO: Handle error
                 return {
                     ...state,
                     updating: state.updating - 1
                 };
 
-            case SET_ENTITY:
+            case Events.SET_ENTITY:
                 return {
                     ...state,
                     updating: state.updating - 1,
@@ -189,7 +244,7 @@ export default function reducer<T extends Entity>(table: string) {
                     }
                 };
 
-            case SET_ENTITIES:
+            case Events.SET_ENTITIES:
                 const updatedData = action.entities.reduce((ent: {[id: number]: T}, entity) => {
                     ent[entity.id as number] = entity;
 
@@ -203,7 +258,7 @@ export default function reducer<T extends Entity>(table: string) {
                     data: updatedData
                 };
 
-            case DELETE_ENTITY:
+            case Events.DELETE_ENTITY:
                 const { [action.id]: removedEntity, ...data } = state.data;
 
                 return {

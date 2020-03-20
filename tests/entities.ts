@@ -53,8 +53,8 @@ export function toWorker(data: Model): Worker {
 }
 
 export const workerInclude: Includeable[] = [
-    { table: 'projects', key: 'projects' },
-    { table: 'departments', key: 'department' },
+    { table: 'projects', key: 'projects', linkedKey: 'workers' },
+    { table: 'departments', key: 'department', linkedKey: 'workers' },
     { table: 'workers', key: 'boss', toEntity: toWorker }
 ];
 
@@ -76,7 +76,7 @@ export function toProject(data: Model): Project {
 }
 
 export const projectInclude: Includeable[] = [
-    { table: 'workers', key: 'workers' }
+    { table: 'workers', key: 'workers', linkedKey: 'department' }
 ];
 
 interface DepartmentModel extends Entity {
@@ -99,5 +99,5 @@ export function toDepartment(data: Model): Department {
 }
 
 export const departmentInclude: Includeable[] = [
-    { table: 'workers', key: 'workers' }
+    { table: 'workers', key: 'workers', linkedKey: 'projects' }
 ];
