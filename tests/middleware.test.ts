@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-import { middleware } from '../lib';
+import { middleware, createRelatedEntity, createRelatedEntities } from '../lib';
 import { updateEntities, setEntity, setEntities } from '../lib/actions';
 
 const create = (state: object = {}) => {
@@ -72,20 +72,9 @@ describe('middleware', () => {
             id: 1,
             name: 'Mike',
             workId: 3,
-            boss: {
-                table: 'workers',
-                id: null,
-                entity: null
-            },
-            department: {
-                table: 'departments',
-                id: null,
-                entity: null
-            },
-            projects: {
-                table: 'projects',
-                entities: {}
-            }
+            boss: createRelatedEntity('workers'),
+            department: createRelatedEntity('departments', 'workers'),
+            projects: createRelatedEntities('projects', 'workers')
         };
 
         const state = {
@@ -102,20 +91,9 @@ describe('middleware', () => {
             id: 2,
             name: 'Thomas',
             workId: 55,
-            boss: {
-                table: 'workers',
-                id: boss.id,
-                entity: null
-            },
-            department: {
-                table: 'departments',
-                id: null,
-                entity: null
-            },
-            projects: {
-                table: 'projects',
-                entities: {}
-            }
+            boss: createRelatedEntity('workers', null, boss.id),
+            department: createRelatedEntity('departments', 'workers'),
+            projects: createRelatedEntities('projects', 'workers')
         };
 
         const { next, invoke } = create(state);
@@ -141,20 +119,9 @@ describe('middleware', () => {
             id: 1,
             name: 'Mike',
             workId: 3,
-            boss: {
-                table: 'workers',
-                id: null,
-                entity: null
-            },
-            department: {
-                table: 'departments',
-                id: null,
-                entity: null
-            },
-            projects: {
-                table: 'projects',
-                entities: {}
-            }
+            boss: createRelatedEntity('workers'),
+            department: createRelatedEntity('departments', 'workers'),
+            projects: createRelatedEntities('projects', 'workers')
         };
 
         const state = {
@@ -171,40 +138,18 @@ describe('middleware', () => {
             id: 2,
             name: 'Thomas',
             workId: 55,
-            boss: {
-                table: 'workers',
-                id: boss.id,
-                entity: null
-            },
-            department: {
-                table: 'departments',
-                id: null,
-                entity: null
-            },
-            projects: {
-                table: 'projects',
-                entities: {}
-            }
+            boss: createRelatedEntity('workers', null, boss.id),
+            department: createRelatedEntity('departments', 'workers'),
+            projects: createRelatedEntities('projects', 'workers')
         };
 
         const worker2 = {
             id: 3,
             name: 'Steven',
             workId: 67,
-            boss: {
-                table: 'workers',
-                id: boss.id,
-                entity: null
-            },
-            department: {
-                table: 'departments',
-                id: null,
-                entity: null
-            },
-            projects: {
-                table: 'projects',
-                entities: {}
-            }
+            boss: createRelatedEntity('workers', null, boss.id),
+            department: createRelatedEntity('departments', 'workers'),
+            projects: createRelatedEntities('projects', 'workers')
         }
 
         const { next, invoke } = create(state);

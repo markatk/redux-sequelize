@@ -81,10 +81,10 @@ export function mapRelatedEntity<T extends Entity>(table: string, data: T, linke
     };
 }
 
-export function createRelatedEntity(table: string, linkedKey: string | null = null): RelatedEntity<Entity> {
+export function createRelatedEntity(table: string, linkedKey: string | null = null, id: number | null = null): RelatedEntity<Entity> {
     return {
         table,
-        id: null,
+        id,
         entity: null,
         linkedKey
     };
@@ -107,10 +107,14 @@ export function mapRelatedEntities<T extends Entity>(table: string, data: T[], l
     };
 }
 
-export function createRelatedEntities(table: string, linkedKey: string | null = null): RelatedEntities<T> {
+export function createRelatedEntities(table: string, linkedKey: string | null = null, ids: number[] = []): RelatedEntities<Entity> {
     return {
         table,
-        entities: {},
+        entities: ids.reduce((ent: {[key: number]: Entity | null}, id) => {
+            ent[id] = null;
+
+            return ent;
+        }, {}),
         linkedKey
     };
 }

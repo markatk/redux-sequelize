@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-import { isRelatedEntity, isRelatedEntities, includeablesToSequelizeInclude } from '../lib/helpers';
+import { isRelatedEntity, isRelatedEntities, includeablesToSequelizeInclude, createRelatedEntity, createRelatedEntities } from '../lib/helpers';
 import createDatabase from './database';
 import { toWorker } from './entities';
 
@@ -187,5 +187,67 @@ describe('helper functions', () => {
                 attributes: undefined
             }
         ]);
+    });
+
+    it('create entity relation', () => {
+        expect(createRelatedEntity('workers')).toEqual({
+            table: 'workers',
+            id: null,
+            entity: null,
+            linkedKey: null
+        });
+
+        expect(createRelatedEntity('workers', 'employees')).toEqual({
+            table: 'workers',
+            id: null,
+            entity: null,
+            linkedKey: 'employees'
+        });
+
+        expect(createRelatedEntity('workers', null, 5)).toEqual({
+            table: 'workers',
+            id: 5,
+            entity: null,
+            linkedKey: null
+        });
+
+        expect(createRelatedEntity('workers', 'employees', 5)).toEqual({
+            table: 'workers',
+            id: 5,
+            entity: null,
+            linkedKey: 'employees'
+        });
+    });
+
+    it('create entities relation', () => {
+        expect(createRelatedEntities('workers')).toEqual({
+            table: 'workers',
+            entities: {},
+            linkedKey: null
+        });
+
+        expect(createRelatedEntities('workers', 'boss')).toEqual({
+            table: 'workers',
+            entities: {},
+            linkedKey: 'boss'
+        });
+
+        expect(createRelatedEntities('workers', null, [2, 3])).toEqual({
+            table: 'workers',
+            entities: {
+                [2]: null,
+                [3]: null
+            },
+            linkedKey: null
+        });
+
+        expect(createRelatedEntities('workers', 'boss', [2, 3])).toEqual({
+            table: 'workers',
+            entities: {
+                [2]: null,
+                [3]: null
+            },
+            linkedKey: 'boss'
+        });
     });
 });

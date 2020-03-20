@@ -28,7 +28,7 @@
 
 import { Reducer } from 'redux';
 
-import { reducer, Events } from '../lib';
+import { reducer, Events, createRelatedEntity, createRelatedEntities } from '../lib';
 import { updateEntities, updatingEntitiesFailed, setEntity, setEntities, deleteEntity } from '../lib/actions';
 import { Worker } from './entities';
 
@@ -80,20 +80,9 @@ describe('entity reducer', () => {
             id: 1,
             name: 'Thomas',
             workId: 55,
-            boss: {
-                table: 'workers',
-                id: null,
-                entity: null
-            },
-            department: {
-                table: 'departments',
-                id: null,
-                entity: null
-            },
-            projects: {
-                table: 'projects',
-                entities: {}
-            }
+            boss: createRelatedEntity('workers'),
+            department: createRelatedEntity('departments', 'workers'),
+            projects: createRelatedEntities('projects', 'workers')
         };
 
         expect(workerReducer({
@@ -114,20 +103,9 @@ describe('entity reducer', () => {
             id: 1,
             name: 'Thomas',
             workId: 55,
-            boss: {
-                table: 'workers',
-                id: null,
-                entity: null
-            },
-            department: {
-                table: 'departments',
-                id: null,
-                entity: null
-            },
-            projects: {
-                table: 'projects',
-                entities: {}
-            }
+            boss: createRelatedEntity('workers'),
+            department: createRelatedEntity('departments', 'workers'),
+            projects: createRelatedEntities('projects', 'workers')
         };
 
         expect(workerReducer({
@@ -155,39 +133,17 @@ describe('entity reducer', () => {
                 id: 1,
                 name: 'Thomas',
                 workId: 55,
-                boss: {
-                    table: 'workers',
-                    id: null,
-                    entity: null
-                },
-                department: {
-                    table: 'departments',
-                    id: null,
-                    entity: null
-                },
-                projects: {
-                    table: 'projects',
-                    entities: {}
-                }
+                boss: createRelatedEntity('workers'),
+                department: createRelatedEntity('departments', 'workers'),
+                projects: createRelatedEntities('projects', 'workers')
             },
             {
                 id: 2,
                 name: 'Mike',
                 workId: 3,
-                boss: {
-                    table: 'workers',
-                    id: null,
-                    entity: null
-                },
-                department: {
-                    table: 'departments',
-                    id: null,
-                    entity: null
-                },
-                projects: {
-                    table: 'projects',
-                    entities: {}
-                }
+                boss: createRelatedEntity('workers'),
+                department: createRelatedEntity('departments', 'workers'),
+                projects: createRelatedEntities('projects', 'workers')
             }
         ];
 
@@ -213,20 +169,9 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
-                    department: {
-                        table: 'departments',
-                        id: null,
-                        entity: null
-                    },
-                    projects: {
-                        table: 'projects',
-                        entities: {}
-                    }
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
@@ -245,20 +190,9 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
-                    department: {
-                        table: 'departments',
-                        id: null,
-                        entity: null
-                    },
-                    projects: {
-                        table: 'projects',
-                        entities: {}
-                    }
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
@@ -269,20 +203,9 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
-                    department: {
-                        table: 'departments',
-                        id: null,
-                        entity: null
-                    },
-                    projects: {
-                        table: 'projects',
-                        entities: {}
-                    }
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
@@ -297,20 +220,9 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
-                    department: {
-                        table: 'departments',
-                        id: 1,
-                        entity: null
-                    },
-                    projects: {
-                        table: 'projects',
-                        entities: {}
-                    }
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers', 1),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
@@ -324,23 +236,17 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
+                    boss: createRelatedEntity('workers'),
                     department: {
                         table: 'departments',
                         id: 1,
                         entity: {
                             id: 1,
                             name: 'Development'
-                        }
+                        },
+                        linkedKey: 'workers'
                     },
-                    projects: {
-                        table: 'projects',
-                        entities: {}
-                    }
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
@@ -353,20 +259,9 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
-                    department: {
-                        table: 'departments',
-                        id: 1,
-                        entity: null
-                    },
-                    projects: {
-                        table: 'projects',
-                        entities: {}
-                    }
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers', 1),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
@@ -382,23 +277,17 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
+                    boss: createRelatedEntity('workers'),
                     department: {
                         table: 'departments',
                         id: 1,
                         entity: {
                             id: 1,
                             name: 'Development'
-                        }
+                        },
+                        linkedKey: 'workers'
                     },
-                    projects: {
-                        table: 'projects',
-                        entities: {}
-                    }
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
@@ -411,22 +300,9 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
-                    department: {
-                        table: 'departments',
-                        id: null,
-                        entity: null
-                    },
-                    projects: {
-                        table: 'projects',
-                        entities: {
-                            [1]: null
-                        }
-                    }
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers', [1])
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
@@ -440,16 +316,8 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
-                    department: {
-                        table: 'departments',
-                        id: null,
-                        entity: null
-                    },
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
                     projects: {
                         table: 'projects',
                         entities: {
@@ -457,7 +325,8 @@ describe('entity reducer', () => {
                                 id: 1,
                                 name: 'Project Deep'
                             }
-                        }
+                        },
+                        linkedKey: 'workers'
                     }
                 }
             },
@@ -473,20 +342,9 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
-                    department: {
-                        table: 'departments',
-                        id: 1,
-                        entity: null
-                    },
-                    projects: {
-                        table: 'projects',
-                        entities: {}
-                    }
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers', 1),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
@@ -500,20 +358,9 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
-                    department: {
-                        table: 'departments',
-                        id: 1,
-                        entity: null
-                    },
-                    projects: {
-                        table: 'projects',
-                        entities: {}
-                    }
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers', 1),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
@@ -526,20 +373,9 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
-                    department: {
-                        table: 'departments',
-                        id: 1,
-                        entity: null
-                    },
-                    projects: {
-                        table: 'projects',
-                        entities: {}
-                    }
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers', 1),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
@@ -550,20 +386,9 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
-                    department: {
-                        table: 'departments',
-                        id: 1,
-                        entity: null
-                    },
-                    projects: {
-                        table: 'projects',
-                        entities: {}
-                    }
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers', 1),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
@@ -578,20 +403,9 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
-                    department: {
-                        table: 'departments',
-                        id: 1,
-                        entity: null
-                    },
-                    projects: {
-                        table: 'projects',
-                        entities: {}
-                    }
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers', 1),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
@@ -605,20 +419,9 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
-                    department: {
-                        table: 'departments',
-                        id: 1,
-                        entity: null
-                    },
-                    projects: {
-                        table: 'projects',
-                        entities: {}
-                    }
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers', 1),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
@@ -633,23 +436,17 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
+                    boss: createRelatedEntity('workers'),
                     department: {
                         table: 'departments',
                         id: 1,
                         entity: {
                             id: 1,
                             name: 'Development'
-                        }
+                        },
+                        linkedKey: 'workers'
                     },
-                    projects: {
-                        table: 'projects',
-                        entities: {}
-                    }
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
@@ -660,20 +457,9 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
-                    department: {
-                        table: 'departments',
-                        id: null,
-                        entity: null
-                    },
-                    projects: {
-                        table: 'projects',
-                        entities: {}
-                    }
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
@@ -686,16 +472,8 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
-                    department: {
-                        table: 'departments',
-                        id: null,
-                        entity: null
-                    },
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
                     projects: {
                         table: 'projects',
                         entities: {
@@ -719,16 +497,8 @@ describe('entity reducer', () => {
                     id: 1,
                     name: 'Thomas',
                     workId: 55,
-                    boss: {
-                        table: 'workers',
-                        id: null,
-                        entity: null
-                    },
-                    department: {
-                        table: 'departments',
-                        id: null,
-                        entity: null
-                    },
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
                     projects: {
                         table: 'projects',
                         entities: {
@@ -749,23 +519,9 @@ describe('entity reducer', () => {
             id: 1,
             name: 'Thomas',
             workId: 55,
-            boss: {
-                table: 'workers',
-                id: null,
-                entity: null,
-                linkedKey: null
-            },
-            department: {
-                table: 'departments',
-                id: null,
-                entity: null,
-                linkedKey: 'workers'
-            },
-            projects: {
-                table: 'projects',
-                entities: {},
-                linkedKey: 'workers'
-            }
+            boss: createRelatedEntity('workers'),
+            department: createRelatedEntity('departments', 'workers'),
+            projects: createRelatedEntities('projects', 'workers')
         };
 
         const department = {
@@ -807,23 +563,9 @@ describe('entity reducer', () => {
             id: 1,
             name: 'Thomas',
             workId: 55,
-            boss: {
-                table: 'workers',
-                id: null,
-                entity: null,
-                linkedKey: null
-            },
-            department: {
-                table: 'departments',
-                id: null,
-                entity: null,
-                linkedKey: 'workers'
-            },
-            projects: {
-                table: 'projects',
-                entities: {},
-                linkedKey: 'workers'
-            }
+            boss: createRelatedEntity('workers'),
+            department: createRelatedEntity('departments', 'workers'),
+            projects: createRelatedEntities('projects', 'workers')
         };
 
         const project = {

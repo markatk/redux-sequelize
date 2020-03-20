@@ -284,13 +284,7 @@ describe('entity actions', () => {
                 table,
                 entity: {
                     ...worker,
-                    // TODO: Add function to create such mapping
-                    boss: {
-                        table: 'workers',
-                        id: boss.id,
-                        entity: null,
-                        linkedKey: null
-                    },
+                    boss: createRelatedEntity('workers', null, boss.id),
                     department: createRelatedEntity('departments', 'workers'),
                     projects: createRelatedEntities('projects', 'workers')
                 }
@@ -340,15 +334,7 @@ describe('entity actions', () => {
                     ...worker,
                     boss: createRelatedEntity('workers'),
                     department: createRelatedEntity('departments', 'workers'),
-                    // TODO: Add function to create such mapping
-                    projects: {
-                        table: 'projects',
-                        entities: {
-                            [projectA.get('id') as number]: null,
-                            [projectB.get('id') as number]: null
-                        },
-                        linkedKey: 'workers'
-                    }
+                    projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number, projectB.get('id') as number])
                 }
             }
         ];
@@ -444,25 +430,13 @@ describe('entity actions', () => {
                         ...worker,
                         boss: createRelatedEntity('workers'),
                         department: createRelatedEntity('departments', 'workers'),
-                        projects: {
-                            table: 'projects',
-                            entities: {
-                                [projectA.get('id') as number]: null
-                            },
-                            linkedKey: 'workers'
-                        }
+                        projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number])
                     },
                     {
                         ...boss,
                         boss: createRelatedEntity('workers'),
                         department: createRelatedEntity('departments', 'workers'),
-                        projects: {
-                            table: 'projects',
-                            entities: {
-                                [projectB.get('id') as number]: null
-                            },
-                            linkedKey: 'workers'
-                        }
+                        projects: createRelatedEntities('projects', 'workers', [projectB.get('id') as number])
                     }
                 ]
             }
@@ -491,12 +465,7 @@ describe('entity actions', () => {
                 table,
                 entity: {
                     ...worker,
-                    boss: {
-                        table: 'workers',
-                        id: boss.id,
-                        entity: null,
-                        linkedKey: null
-                    },
+                    boss: createRelatedEntity('workers', null, boss.id),
                     department: createRelatedEntity('departments', 'workers'),
                     projects: createRelatedEntities('projects', 'workers')
                 }
@@ -542,14 +511,7 @@ describe('entity actions', () => {
                     ...worker,
                     boss: createRelatedEntity('workers'),
                     department: createRelatedEntity('departments', 'workers'),
-                    projects: {
-                        table: 'projects',
-                        entities: {
-                            [projectA.get('id') as number]: null,
-                            [projectB.get('id') as number]: null
-                        },
-                        linkedKey: 'workers'
-                    }
+                    projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number, projectB.get('id') as number])
                 }
             }
         ];
@@ -586,12 +548,7 @@ describe('entity actions', () => {
                 table,
                 entity: {
                     ...worker,
-                    boss: {
-                        table: 'workers',
-                        id: boss.id,
-                        entity: null,
-                        linkedKey: null
-                    },
+                    boss: createRelatedEntity('workers', null, boss.id),
                     department: createRelatedEntity('departments', 'workers'),
                     projects: createRelatedEntities('projects', 'workers')
                 }
@@ -635,14 +592,7 @@ describe('entity actions', () => {
                     ...worker,
                     boss: createRelatedEntity('workers'),
                     department: createRelatedEntity('departments', 'workers'),
-                    projects: {
-                        table: 'projects',
-                        entities: {
-                            [projectA.get('id') as number]: null,
-                            [projectB.get('id') as number]: null
-                        },
-                        linkedKey: 'workers'
-                    }
+                    projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number, projectB.get('id') as number])
                 }
             }
         ];
@@ -651,14 +601,7 @@ describe('entity actions', () => {
 
         await store.dispatch(createWorker({
             ...worker,
-            projects: {
-                table: 'projects',
-                entities: {
-                    [projectA.get('id') as number]: null,
-                    [projectB.get('id') as number]: null
-                },
-                linkedKey: null
-            }
+            projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number, projectB.get('id') as number])
         }));
         expect(store.getActions()).toEqual(expectedActions);
 
