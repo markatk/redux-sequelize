@@ -81,6 +81,15 @@ export function mapRelatedEntity<T extends Entity>(table: string, data: T, linke
     };
 }
 
+export function createRelatedEntity(table: string, linkedKey: string | null = null): RelatedEntity<Entity> {
+    return {
+        table,
+        id: null,
+        entity: null,
+        linkedKey
+    };
+}
+
 export function mapRelatedEntities<T extends Entity>(table: string, data: T[], linkedKey: string | null = null): RelatedEntities<T> {
     let entities = {};
     if (data != null) {
@@ -94,6 +103,14 @@ export function mapRelatedEntities<T extends Entity>(table: string, data: T[], l
     return {
         table,
         entities,
+        linkedKey
+    };
+}
+
+export function createRelatedEntities(table: string, linkedKey: string | null = null): RelatedEntities<T> {
+    return {
+        table,
+        entities: {},
         linkedKey
     };
 }

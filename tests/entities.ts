@@ -46,8 +46,8 @@ export function toWorker(data: Model): Worker {
         name: data.get('name') as string,
         workId: data.get('workId') as number,
 
-        projects: mapRelatedEntities<Project>('projects', data.get('projects') as Project[]),
-        department: mapRelatedEntity<Department>('departments', data.get('department') as Department),
+        projects: mapRelatedEntities<Project>('projects', data.get('projects') as Project[], 'workers'),
+        department: mapRelatedEntity<Department>('departments', data.get('department') as Department, 'workers'),
         boss: mapRelatedEntity<Worker>('workers', data.get('boss') as Worker)
     };
 }
@@ -71,12 +71,12 @@ export function toProject(data: Model): Project {
         id: data.get('id') as number,
         name: data.get('name') as string,
 
-        workers: mapRelatedEntities<Worker>('workers', data.get('workers') as Worker[])
+        workers: mapRelatedEntities<Worker>('workers', data.get('workers') as Worker[], 'projects')
     };
 }
 
 export const projectInclude: Includeable[] = [
-    { table: 'workers', key: 'workers', linkedKey: 'department' }
+    { table: 'workers', key: 'workers', linkedKey: 'projects' }
 ];
 
 interface DepartmentModel extends Entity {
@@ -94,10 +94,10 @@ export function toDepartment(data: Model): Department {
         name: data.get('name') as string,
         floor: data.get('floor') as number,
 
-        workers: mapRelatedEntities<Worker>('workers', data.get('workers') as Worker[])
+        workers: mapRelatedEntities<Worker>('workers', data.get('workers') as Worker[], 'department')
     };
 }
 
 export const departmentInclude: Includeable[] = [
-    { table: 'workers', key: 'workers', linkedKey: 'projects' }
+    { table: 'workers', key: 'workers', linkedKey: 'department' }
 ];

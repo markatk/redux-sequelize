@@ -29,7 +29,7 @@
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 
-import { createActions, Events, mapRelatedEntity, mapRelatedEntities } from '../lib';
+import { createActions, Events, createRelatedEntity, createRelatedEntities } from '../lib';
 import { updateEntities, updatingEntitiesFailed, setEntity, setEntities, deleteEntity } from '../lib/actions';
 import { Worker, toWorker, Department, Project, workerInclude, toProject } from './entities';
 import createDatabase from './database';
@@ -91,9 +91,9 @@ describe('entity actions', () => {
                 table,
                 entity: {
                     ...worker,
-                    boss: mapRelatedEntity<Worker>('workers', null),
-                    department: mapRelatedEntity<Department>('departments', null),
-                    projects: mapRelatedEntities<Project>('projects', null)
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             }
         ];
@@ -153,9 +153,9 @@ describe('entity actions', () => {
                 table,
                 entity: {
                     ...worker,
-                    boss: mapRelatedEntity<Worker>('workers', null),
-                    department: mapRelatedEntity<Department>('departments', null),
-                    projects: mapRelatedEntities<Project>('projects', null)
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             }
         ];
@@ -204,9 +204,9 @@ describe('entity actions', () => {
                 entity: {
                     ...worker,
                     name: 'Mike',
-                    boss: mapRelatedEntity<Worker>('workers', null),
-                    department: mapRelatedEntity<Department>('departments', null),
-                    projects: mapRelatedEntities<Project>('projects', null)
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             }
         ];
@@ -291,8 +291,8 @@ describe('entity actions', () => {
                         entity: null,
                         linkedKey: null
                     },
-                    department: mapRelatedEntity<Department>('departments', null),
-                    projects: mapRelatedEntities<Project>('projects', null)
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             }
         ];
@@ -338,8 +338,8 @@ describe('entity actions', () => {
                 table,
                 entity: {
                     ...worker,
-                    boss: mapRelatedEntity<Worker>('workers', null),
-                    department: mapRelatedEntity<Department>('departments', null),
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
                     // TODO: Add function to create such mapping
                     projects: {
                         table: 'projects',
@@ -347,7 +347,7 @@ describe('entity actions', () => {
                             [projectA.get('id') as number]: null,
                             [projectB.get('id') as number]: null
                         },
-                        linkedKey: null
+                        linkedKey: 'workers'
                     }
                 }
             }
@@ -362,8 +362,8 @@ describe('entity actions', () => {
     });
 
     it('get multiple entities', async () => {
-        const workerEntity = await database.model(table).create(worker);
-        const bossEntity = await database.model(table).create(boss);
+        await database.model(table).create(worker);
+        await database.model(table).create(boss);
         expect(await database.model(table).count()).toBe(2);
 
         const expectedActions = [
@@ -386,15 +386,15 @@ describe('entity actions', () => {
                 entities: [
                     {
                         ...worker,
-                        boss: mapRelatedEntity<Department>('workers', null),
-                        department: mapRelatedEntity<Department>('departments', null),
-                        projects: mapRelatedEntities<Project>('projects', null)
+                        boss: createRelatedEntity('workers'),
+                        department: createRelatedEntity('departments', 'workers'),
+                        projects: createRelatedEntities('projects', 'workers')
                     },
                     {
                         ...boss,
-                        boss: mapRelatedEntity<Department>('workers', null),
-                        department: mapRelatedEntity<Department>('departments', null),
-                        projects: mapRelatedEntities<Project>('projects', null)
+                        boss: createRelatedEntity('workers'),
+                        department: createRelatedEntity('departments', 'workers'),
+                        projects: createRelatedEntities('projects', 'workers')
                     }
                 ]
             }
@@ -442,26 +442,26 @@ describe('entity actions', () => {
                 entities: [
                     {
                         ...worker,
-                        boss: mapRelatedEntity<Department>('workers', null),
-                        department: mapRelatedEntity<Department>('departments', null),
+                        boss: createRelatedEntity('workers'),
+                        department: createRelatedEntity('departments', 'workers'),
                         projects: {
                             table: 'projects',
                             entities: {
                                 [projectA.get('id') as number]: null
                             },
-                            linkedKey: null
+                            linkedKey: 'workers'
                         }
                     },
                     {
                         ...boss,
-                        boss: mapRelatedEntity<Department>('workers', null),
-                        department: mapRelatedEntity<Department>('departments', null),
+                        boss: createRelatedEntity('workers'),
+                        department: createRelatedEntity('departments', 'workers'),
                         projects: {
                             table: 'projects',
                             entities: {
                                 [projectB.get('id') as number]: null
                             },
-                            linkedKey: null
+                            linkedKey: 'workers'
                         }
                     }
                 ]
@@ -497,8 +497,8 @@ describe('entity actions', () => {
                         entity: null,
                         linkedKey: null
                     },
-                    department: mapRelatedEntity<Department>('departments', null),
-                    projects: mapRelatedEntities<Project>('projects', null)
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             }
         ];
@@ -540,15 +540,15 @@ describe('entity actions', () => {
                 table,
                 entity: {
                     ...worker,
-                    boss: mapRelatedEntity<Worker>('workers', null),
-                    department: mapRelatedEntity<Department>('departments', null),
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
                     projects: {
                         table: 'projects',
                         entities: {
                             [projectA.get('id') as number]: null,
                             [projectB.get('id') as number]: null
                         },
-                        linkedKey: null
+                        linkedKey: 'workers'
                     }
                 }
             }
@@ -564,7 +564,7 @@ describe('entity actions', () => {
                     [projectA.get('id') as number]: null,
                     [projectB.get('id') as number]: null
                 },
-                linkedKey: null
+                linkedKey: 'workers'
             }
         }));
         expect(store.getActions()).toEqual(expectedActions);
@@ -592,8 +592,8 @@ describe('entity actions', () => {
                         entity: null,
                         linkedKey: null
                     },
-                    department: mapRelatedEntity<Department>('departments', null),
-                    projects: mapRelatedEntities<Project>('projects', null)
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers')
                 }
             }
         ];
@@ -633,15 +633,15 @@ describe('entity actions', () => {
                 table,
                 entity: {
                     ...worker,
-                    boss: mapRelatedEntity<Worker>('workers', null),
-                    department: mapRelatedEntity<Department>('departments', null),
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
                     projects: {
                         table: 'projects',
                         entities: {
                             [projectA.get('id') as number]: null,
                             [projectB.get('id') as number]: null
                         },
-                        linkedKey: null
+                        linkedKey: 'workers'
                     }
                 }
             }

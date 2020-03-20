@@ -31,7 +31,7 @@ import middleware from './middleware';
 import reducer from './reducer';
 import * as Events from './events';
 import { createActions } from './actions';
-import { mapRelatedEntity, mapRelatedEntities } from './helpers';
+import { mapRelatedEntity, mapRelatedEntities, createRelatedEntity, createRelatedEntities } from './helpers';
 
 export {
     middleware,
@@ -44,5 +44,7 @@ export {
     ToEntity,
     createActions,
     mapRelatedEntity,
-    mapRelatedEntities
+    mapRelatedEntities,
+    createRelatedEntity,
+    createRelatedEntities
 };
