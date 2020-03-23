@@ -558,6 +558,72 @@ describe('entity reducer', () => {
         });
     });
 
+    it('move double linked entity relation', () => {
+        const workers = [
+            {
+                id: 1,
+                name: 'Thomas',
+                workId: 55,
+                boss: createRelatedEntity('workers'),
+                department: createRelatedEntity('departments', 'workers'),
+                projects: createRelatedEntities('projects', 'workers')
+            },
+            {
+                id: 2,
+                name: 'Mike',
+                workId: 3,
+                boss: createRelatedEntity('workers'),
+                department: createRelatedEntity('departments', 'workers'),
+                projects: createRelatedEntities('projects', 'workers')
+            }
+        ];
+
+        const department = {
+            id: 1,
+            name: 'Development',
+            workers: {
+                table: 'workers',
+                linkedKey: 'department',
+                entities: {
+                    [workers[1].id]: workers[1]
+                }
+            }
+        };
+
+        workers[0].department.id = department.id;
+        workers[0].department.entity = department;
+
+        expect(workerReducer({
+            updating: 0,
+            data: {
+                [workers[0].id]: workers[0],
+                [workers[1].id]: workers[1]
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        }, setEntity('departments', department))).toEqual({
+            updating: 0,
+            data: {
+                [workers[0].id]: {
+                    ...workers[0],
+                    department: {
+                        ...workers[0].department,
+                        id: null,
+                        entity: null
+                    }
+                },
+                [workers[1].id]: {
+                    ...workers[1],
+                    department: {
+                        ...workers[1].department,
+                        id: 1,
+                        entity: department
+                    }
+                }
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        });
+    });
+
     it('update double linked entities relation', () => {
         const worker = {
             id: 1,
@@ -596,6 +662,198 @@ describe('entity reducer', () => {
                         entities: {
                             [project.id]: project
                         }
+                    }
+                }
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        });
+    });
+
+    it('remove double linked entity relation', () => {
+        const worker = {
+            id: 1,
+            name: 'Thomas',
+            workId: 55,
+            boss: createRelatedEntity('workers'),
+            department: createRelatedEntity('departments', 'workers', 1),
+            projects: createRelatedEntities('projects', 'workers')
+        };
+
+        const department = {
+            id: 1,
+            name: 'Development',
+            workers: {
+                table: 'workers',
+                linkedKey: 'department',
+                entities: {
+                    [1]: worker
+                }
+            }
+        };
+
+        worker.department.entity = department;
+
+        expect(workerReducer({
+            updating: 0,
+            data: {
+                [1]: worker
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        }, setEntity('departments', {
+            ...department,
+            workers: {
+                ...department.workers,
+                entities: {}
+            }
+        }))).toEqual({
+            updating: 0,
+            data: {
+                [1]: {
+                    ...worker,
+                    department: {
+                        ...worker.department,
+                        id: null,
+                        entity: null
+                    }
+                }
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        });
+    });
+
+    it('remove double linked entities relation', () => {
+        const worker = {
+            id: 1,
+            name: 'Thomas',
+            workId: 55,
+            boss: createRelatedEntity('workers'),
+            department: createRelatedEntity('departments', 'workers'),
+            projects: createRelatedEntities('projects', 'workers', [1])
+        };
+
+        const project = {
+            id: 1,
+            name: 'Project Deep',
+            workers: {
+                table: 'workers',
+                linkedKey: 'projects',
+                entities: {
+                    [1]: worker
+                }
+            }
+        };
+
+        worker.projects.entities[1] = project;
+
+        expect(workerReducer({
+            updating: 0,
+            data: {
+                [1]: worker
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        }, setEntity('projects', {
+            ...project,
+            workers: {
+                ...project.workers,
+                entities: {}
+            }
+        }))).toEqual({
+            updating: 0,
+            data: {
+                [1]: {
+                    ...worker,
+                    projects: {
+                        ...worker.projects,
+                        entities: {}
+                    }
+                }
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        });
+    });
+
+    it('delete double linked entity', () => {
+        const worker = {
+            id: 1,
+            name: 'Thomas',
+            workId: 55,
+            boss: createRelatedEntity('workers'),
+            department: createRelatedEntity('departments', 'workers', 1),
+            projects: createRelatedEntities('projects', 'workers')
+        };
+
+        const department = {
+            id: 1,
+            name: 'Development',
+            workers: {
+                table: 'workers',
+                linkedKey: 'department',
+                entities: {}
+            }
+        };
+
+        worker.department.entity = department;
+
+        expect(workerReducer({
+            updating: 0,
+            data: {
+                [1]: worker
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        }, deleteEntity('departments', 1))).toEqual({
+            updating: 0,
+            data: {
+                [1]: {
+                    ...worker,
+                    department: {
+                        ...worker.department,
+                        id: null,
+                        entity: null
+                    }
+                }
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        });
+    });
+
+    it('update double linked entities relation', () => {
+        const worker = {
+            id: 1,
+            name: 'Thomas',
+            workId: 55,
+            boss: createRelatedEntity('workers'),
+            department: createRelatedEntity('departments', 'workers'),
+            projects: createRelatedEntities('projects', 'workers', [1])
+        };
+
+        const project = {
+            id: 1,
+            name: 'Project Deep',
+            workers: {
+                table: 'workers',
+                linkedKey: 'projects',
+                entities: {
+                    [1]: worker
+                }
+            }
+        };
+
+        worker.projects.entities[1] = project;
+
+        expect(workerReducer({
+            updating: 0,
+            data: {
+                [1]: worker
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        }, deleteEntity('projects', 1))).toEqual({
+            updating: 0,
+            data: {
+                [1]: {
+                    ...worker,
+                    projects: {
+                        ...worker.projects,
+                        entities: {}
                     }
                 }
             },

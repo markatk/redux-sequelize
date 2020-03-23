@@ -68,9 +68,28 @@ function updateEntities<T extends Entity>(state: EntitiesState<T>, action: Event
                     continue;
                 }
 
-                const relatedEntity = getEntityFromAction(action, related.id);
+                let relatedEntity = getEntityFromAction(action, related.id);
                 if (relatedEntity != null) {
-                    related.entity = relatedEntity;
+                    if (related.linkedKey != null) {
+                        // unset related entity if changed in related
+                        if (isRelatedEntity(relatedEntity[related.linkedKey])) {
+                            if (relatedEntity[related.linkedKey].id !== entity.id) {
+                                relatedEntity = null;
+                            }
+                        } else if (isRelatedEntities(relatedEntity[related.linkedKey])) {
+                            if (Object.keys(relatedEntity[related.linkedKey].entities).includes(entity.id!.toString()) === false) {
+                                relatedEntity = null;
+                            }
+                        }
+                    }
+
+                    // remove related entry if no longer linked
+                    if (relatedEntity != null) {
+                        related.entity = relatedEntity;
+                    } else {
+                        related.id = null;
+                        related.entity = null;
+                    }
                 }
             } else if (isRelatedEntities(entity[key])) {
                 const related = entity[key];
@@ -83,9 +102,27 @@ function updateEntities<T extends Entity>(state: EntitiesState<T>, action: Event
                         continue;
                     }
 
-                    const relatedEntity = getEntityFromAction(action, parseInt(relatedId));
+                    let relatedEntity = getEntityFromAction(action, parseInt(relatedId));
                     if (relatedEntity != null) {
-                        related.entities[relatedId] = relatedEntity;
+                        if (related.linkedKey != null) {
+                            // unset related entity if changed in related
+                            if (isRelatedEntity(relatedEntity[related.linkedKey])) {
+                                if (relatedEntity[related.linkedKey].id !== entity.id) {
+                                    relatedEntity = null;
+                                }
+                            } else if (isRelatedEntities(relatedEntity[related.linkedKey])) {
+                                if (Object.keys(relatedEntity[related.linkedKey].entities).includes(entity.id!.toString()) === false) {
+                                    relatedEntity = null;
+                                }
+                            }
+                        }
+
+                        // remove related entry if no longer linked
+                        if (relatedEntity != null) {
+                            related.entities[relatedId] = relatedEntity;
+                        } else {
+                            delete related.entities[relatedId];
+                        }
                     }
                 }
             }
