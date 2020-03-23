@@ -2,7 +2,7 @@
   "name": "redux-sequelize",
   "version": "0.1.0",
   "description": "Redux middleware, reducer and actions to work with sequelize databases",
-  "main": "index.js",
+  "main": "dist/index.js",
   "repository": "https://github.com/markatk/redux-sequelize",
   "author": "Markus Grigull <web@grigull.net>",
   "license": "MIT",
