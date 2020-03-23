@@ -122,13 +122,14 @@ function dispatchIncludedEntities<T extends Entity>(
     return data;
 }
 
-export function createActions<T extends Entity>(sequelize: Sequelize, table: string, toEntity: ToEntity<T>, include: Includeable[] = []) {
+export function createActions<T extends Entity>(databaseCallback: () => Sequelize, table: string, toEntity: ToEntity<T>, include: Includeable[] = []) {
     return {
         createEntity: (data: T) => {
             return async (dispatch: Dispatch<Events.EntityActions<T>>) => {
                 dispatch(updateEntities(table));
 
                 try {
+                    const sequelize = databaseCallback();
                     const model = sequelize.model(table);
 
                     // create entity and search for it to include related objects
@@ -181,7 +182,9 @@ export function createActions<T extends Entity>(sequelize: Sequelize, table: str
                 dispatch(updateEntities(table));
 
                 try {
+                    const sequelize = databaseCallback();
                     const model = sequelize.model(table);
+
                     const entity = await model.findByPk(id, { include: includeablesToSequelizeInclude(sequelize, include) });
                     if (entity == null) {
                         dispatch(updatingEntitiesFailed(table, 'get', 'Entity not found', id));
@@ -202,7 +205,9 @@ export function createActions<T extends Entity>(sequelize: Sequelize, table: str
                 dispatch(updateEntities(table));
 
                 try {
+                    const sequelize = databaseCallback();
                     const model = sequelize.model(table);
+
                     const entities = await model.findAll({ where, include: includeablesToSequelizeInclude(sequelize, include) });
 
                     dispatchIncludedEntities(dispatch, entities, include);
@@ -219,7 +224,9 @@ export function createActions<T extends Entity>(sequelize: Sequelize, table: str
                 dispatch(updateEntities(table));
 
                 try {
+                    const sequelize = databaseCallback();
                     const model = sequelize.model(table);
+
                     const entity = await model.findByPk(data.id, { include: includeablesToSequelizeInclude(sequelize, include) });
                     if (entity == null) {
                         dispatch(updatingEntitiesFailed(table, 'set', 'Entity not found', data));
@@ -274,7 +281,9 @@ export function createActions<T extends Entity>(sequelize: Sequelize, table: str
                 dispatch(updateEntities(table));
 
                 try {
+                    const sequelize = databaseCallback();
                     const model = sequelize.model(table);
+
                     const count = await model.destroy({ where: { id }});
                     if (count === 0) {
                         dispatch(updatingEntitiesFailed(table, 'delete', 'Entity not found', id));

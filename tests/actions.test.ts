@@ -43,7 +43,7 @@ const {
     getEntities: getWorkers,
     getEntity: getWorker,
     setEntity: setWorker
-} = createActions<Worker>(database, table, toWorker, workerInclude);
+} = createActions<Worker>(() => database, table, toWorker, workerInclude);
 
 const worker = {
     id: 1,
@@ -78,6 +78,28 @@ describe('entity actions', () => {
         expect(getWorkers).toBeInstanceOf(Function);
         expect(getWorker).toBeInstanceOf(Function);
         expect(setWorker).toBeInstanceOf(Function);
+    });
+
+    it('fail with invalid database', async () => {
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.UPDATING_ENTITIES_FAILED,
+                table,
+                action: 'create',
+                message: 'databaseCallback is not a function',
+                data: worker
+            }
+        ];
+
+        const store = mockStore();
+        const { createEntity } = createActions<Worker>(null, 'workers', toWorker, workerInclude);
+
+        await store.dispatch(createEntity(worker));
+        expect(store.getActions()).toEqual(expectedActions);
     });
 
     it('create entity', async () => {
@@ -122,7 +144,7 @@ describe('entity actions', () => {
         ];
 
         const store = mockStore();
-        const { createEntity: createTest } = createActions<Worker>(database, 'test', toWorker);
+        const { createEntity: createTest } = createActions<Worker>(() => database, 'test', toWorker);
 
         await store.dispatch(createTest(worker));
         expect(store.getActions()).toEqual(expectedActions);
