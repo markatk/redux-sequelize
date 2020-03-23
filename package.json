@@ -1,6 +1,6 @@
 {
   "name": "redux-sequelize",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Redux middleware, reducer and actions to work with sequelize databases",
   "main": "index.js",
   "repository": "https://github.com/markatk/redux-sequelize",
