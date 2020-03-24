@@ -80,7 +80,7 @@ export function deleteEntity(table: string, id: number): Events.DeleteEntityActi
     };
 }
 
-function dispatchIncludedEntities<T extends Entity>(
+export function dispatchIncludedEntities<T extends Entity>(
     dispatch: Dispatch<Events.EntityActions<T>>,
     entities: Model[],
     includeables: Includeable[]

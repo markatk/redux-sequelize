@@ -26,7 +26,14 @@
  * SOFTWARE.
  */
 
-import { isRelatedEntity, isRelatedEntities, includeablesToSequelizeInclude, createRelatedEntity, createRelatedEntities } from '../lib/helpers';
+import {
+    isRelatedEntity,
+    isRelatedEntities,
+    includeablesToSequelizeInclude,
+    createRelatedEntity,
+    createRelatedEntities,
+    includeablesToEntityStore
+} from '../lib/helpers';
 import createDatabase from './database';
 import { toWorker } from './entities';
 
@@ -249,5 +256,31 @@ describe('helper functions', () => {
             },
             linkedKey: 'boss'
         });
+    });
+
+    it('convert includeables', () => {
+        expect(includeablesToSequelizeInclude(database, [
+            {
+                key: 'department',
+                table: 'departments',
+                linkedKey: 'workers'
+            },
+            {
+                key: 'boss',
+                table: 'workers',
+                toEntity: toWorker
+            }
+        ])).toEqual([
+            {
+                as: 'department',
+                model: database.model('departments'),
+                attributes: ['id']
+            },
+            {
+                as: 'boss',
+                model: database.model('workers'),
+                attributes: undefined
+            }
+        ]);
     });
 });

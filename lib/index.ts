@@ -30,8 +30,8 @@ import { Entity, RelatedEntity, RelatedEntities, Includeable, ToEntity } from '.
 import middleware from './middleware';
 import reducer from './reducer';
 import * as Events from './events';
-import { createActions } from './actions';
-import { mapRelatedEntity, mapRelatedEntities, createRelatedEntity, createRelatedEntities } from './helpers';
+import { createActions, dispatchIncludedEntities } from './actions';
+import { mapRelatedEntity, mapRelatedEntities, createRelatedEntity, createRelatedEntities, includeablesToSequelizeInclude } from './helpers';
 
 export {
     middleware,
@@ -46,5 +46,7 @@ export {
     mapRelatedEntity,
     mapRelatedEntities,
     createRelatedEntity,
-    createRelatedEntities
+    createRelatedEntities,
+    includeablesToSequelizeInclude,
+    dispatchIncludedEntities
 };
