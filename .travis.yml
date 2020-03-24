@@ -4,6 +4,7 @@ node_js:
 cache: yarn
 
 script:
+- yarn run build
 - yarn run test
 - if [ "$TRAVIS_BRANCH" = "master" ]; then yarn run coveralls; fi
 
@@ -15,4 +16,3 @@ deploy:
     secure: SLntbBxviuNXcfeA7y6xDr96u70C//sdcfDwND4vgBrKZ0MULH2YsdJFWiKyQFBdggiMqIYTTtw10cL/8SgF3igNK58TDtAe8GJGmLeSLxlDXM+iJKeQwGMsdf3NGrpjge9eI0gcEHrmqpnGrr+IlWF2jy1suMccoZrnMo7U6e/Uu8QhvqmLdvT3z6xw9wcX5D7jV9iSZ6s+JiAU0DdTVi06j+ne14Rru1c7QwLvbWfuY0VGXZ7158nF14iXDuIU9WombPdqfM2OFc2zj/IM8vreqy9yVOXEjwUGZCsr8XZ/N9gCyh13BfFoncGH/uvTME5zUpdynx+8+4SjIAUVKT1ln/V+aknoGGCz+jlG6Q7RmM2jK8iHG67hokJoKt3xjD9z0zkfKNG/eBsHaH6Y+CCwORpWb4E6zz1pEoMdFxaODx110arJkUKz26xHQKg0Jtf4dtpjMIicQSmv7Uo1wVq7DpfEZoDaMlLkg0eoaL2BIsvmLOkRhCYLHnnMMAn9YtgC/zDaUdicD942o5YJ1VR0ecrh34IF1JE+KEQsD7N5GfYKHL8mHlQu6q4PI3DDx4oOB9ku0oQ/ZeSOiJiPvaEdXnLzydjYVOhv4GV9rEckRW8tjUTcS13JqFDyZvEMebhgx3eY4FIgg8ca7z5RpOykHQ4WqMRE3UMALzzM99Q=
   on:
     tags: true
-

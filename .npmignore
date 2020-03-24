@@ -1,7 +1,9 @@
 lib/
 node_modules/
 coverage/
+
 .vscode/
 .vs/
 .idea/
+
 .travis.yml
