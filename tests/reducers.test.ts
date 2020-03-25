@@ -860,4 +860,187 @@ describe('entity reducer', () => {
             relatedTables: ['workers', 'departments', 'projects']
         });
     });
+
+    it('updating state entity related entity immutable', () => {
+        const originalDepartment = createRelatedEntity('departments', 'workers');
+
+        const worker = {
+            id: 1,
+            name: 'Thomas',
+            workId: 55,
+            boss: createRelatedEntity('workers'),
+            department: originalDepartment,
+            projects: createRelatedEntities('projects', 'workers')
+        };
+
+        const department = {
+            id: 1,
+            name: 'Development',
+            workers: createRelatedEntities('workers', 'department', [1])
+        };
+
+        department.workers.entities[1] = worker;
+
+        expect(workerReducer({
+            updating: 0,
+            data: {
+                [worker.id]: worker
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        }, setEntity('departments', department))).toEqual({
+            updating: 0,
+            data: {
+                [worker.id]: {
+                    ...worker,
+                    department: {
+                        ...worker.department,
+                        id: department.id,
+                        entity: department
+                    }
+                }
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        });
+
+        // Verify department is actually a new object
+        expect(worker.department).not.toBe(originalDepartment);
+    });
+
+    it('updating state entity related entities immutable', () => {
+        const originalProjects = createRelatedEntities('projects', 'workers');
+
+        const worker = {
+            id: 1,
+            name: 'Thomas',
+            workId: 55,
+            boss: createRelatedEntity('workers'),
+            department: createRelatedEntity('departments', 'workers'),
+            projects: originalProjects
+        };
+
+        const project = {
+            id: 1,
+            name: 'Project Deep',
+            workers: createRelatedEntities('workers', 'projects', [1])
+        };
+
+        project.workers.entities[1] = worker;
+
+        expect(workerReducer({
+            updating: 0,
+            data: {
+                [worker.id]: worker
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        }, setEntity('projects', project))).toEqual({
+            updating: 0,
+            data: {
+                [worker.id]: {
+                    ...worker,
+                    projects: {
+                        ...worker.projects,
+                        entities: {
+                            ...worker.projects.entities,
+                            [project.id]: project
+                        }
+                    }
+                }
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        });
+
+        // Verify projects is actually a new object
+        expect(worker.projects).not.toBe(originalProjects);
+    });
+
+    it('deleting state entity related entity immutable', () => {
+        const originalDepartment = createRelatedEntity('departments', 'workers', 1);
+
+        const worker = {
+            id: 1,
+            name: 'Thomas',
+            workId: 55,
+            boss: createRelatedEntity('workers'),
+            department: originalDepartment,
+            projects: createRelatedEntities('projects', 'workers')
+        };
+
+        const department = {
+            id: 1,
+            name: 'Development',
+            workers: createRelatedEntities('workers', 'department', [1])
+        };
+
+        worker.department.entity = department;
+        department.workers.entities[1] = worker;
+
+        expect(workerReducer({
+            updating: 0,
+            data: {
+                [worker.id]: worker
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        }, deleteEntity('departments', 1))).toEqual({
+            updating: 0,
+            data: {
+                [worker.id]: {
+                    ...worker,
+                    department: {
+                        ...worker.department,
+                        id: null,
+                        entity: null
+                    }
+                }
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        });
+
+        // Verify department is actually a new object
+        expect(worker.department).not.toBe(originalDepartment);
+    });
+
+    it('deleting state entity related entities immutable', () => {
+        const originalProjects = createRelatedEntities('projects', 'workers', [1]);
+
+        const worker = {
+            id: 1,
+            name: 'Thomas',
+            workId: 55,
+            boss: createRelatedEntity('workers'),
+            department: createRelatedEntity('departments', 'workers'),
+            projects: originalProjects
+        };
+
+        const project = {
+            id: 1,
+            name: 'Project Deep',
+            workers: createRelatedEntities('workers', 'projects', [1])
+        };
+
+        worker.projects.entities[1] = project;
+        project.workers.entities[1] = worker;
+
+        expect(workerReducer({
+            updating: 0,
+            data: {
+                [worker.id]: worker
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        }, deleteEntity('projects', 1))).toEqual({
+            updating: 0,
+            data: {
+                [worker.id]: {
+                    ...worker,
+                    projects: {
+                        ...worker.projects,
+                        entities: {}
+                    }
+                }
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        });
+
+        // Verify projects is actually a new object
+        expect(worker.projects).not.toBe(originalProjects);
+    });
 });

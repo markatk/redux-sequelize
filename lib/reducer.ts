@@ -85,10 +85,16 @@ function updateEntities<T extends Entity>(state: EntitiesState<T>, action: Event
 
                     // remove related entry if no longer linked
                     if (relatedEntity != null) {
-                        related.entity = relatedEntity;
+                        entity[key] = {
+                            ...related,
+                            entity: relatedEntity
+                        };
                     } else {
-                        related.id = null;
-                        related.entity = null;
+                        entity[key] = {
+                            ...related,
+                            id: null,
+                            entity: null
+                        };
                     }
                 }
             } else if (isRelatedEntities(entity[key])) {
@@ -119,9 +125,20 @@ function updateEntities<T extends Entity>(state: EntitiesState<T>, action: Event
 
                         // remove related entry if no longer linked
                         if (relatedEntity != null) {
-                            related.entities[relatedId] = relatedEntity;
+                            entity[key] = {
+                                ...related,
+                                entities: {
+                                    ...related.entities,
+                                    [relatedId]: relatedEntity
+                                }
+                            };
                         } else {
-                            delete related.entities[relatedId];
+                            const { [relatedId]: deletedEntity, ...updatedEntities } = related.entities;
+
+                            entity[key] = {
+                                ...related,
+                                entities: updatedEntities
+                            };
                         }
                     }
                 }
@@ -147,21 +164,23 @@ function updateDeletedEntity<T extends Entity>(state: EntitiesState<T>, action: 
                     continue;
                 }
 
-                related.entity = null;
-                related.id = null;
+                entity[key] = {
+                    ...related,
+                    id: null,
+                    entity: null
+                };
             } else if (isRelatedEntities(entity[key])) {
                 const related = entity[key];
                 if (related.table !== action.table) {
                     continue;
                 }
 
-                for (const relatedId in related.entities) {
-                    if (related.entities.hasOwnProperty(relatedId) === false || parseInt(relatedId) !== action.id) {
-                        continue;
-                    }
+                const { [action.id]: deletedEntity, ...updatedEntities } = related.entities;
 
-                    delete related.entities[relatedId];
-                }
+                entity[key] = {
+                    ...related,
+                    entities: updatedEntities
+                };
             }
         }
     }
@@ -180,10 +199,19 @@ function updateRelatedEntity<T extends Entity>(state: EntitiesState<T>, entity: 
             const linkedRelated = related.entity[related.linkedKey];
 
             if (isRelatedEntity(linkedRelated)) {
-                linkedRelated.id = entity.id;
-                linkedRelated.entity = entity;
+                related.entity[related.linkedKey] = {
+                    ...linkedRelated,
+                    id: entity.id,
+                    entity
+                };
             } else if (isRelatedEntities(linkedRelated)) {
-                linkedRelated.entities[entity.id as number] = entity;
+                related.entity[related.linkedKey] = {
+                    ...linkedRelated,
+                    entities: {
+                        ...linkedRelated.entities,
+                        [entity.id as number]: entity
+                    }
+                };
             }
         } else if (isRelatedEntities(entity[key])) {
             const related = entity[key];
@@ -199,10 +227,19 @@ function updateRelatedEntity<T extends Entity>(state: EntitiesState<T>, entity: 
                 const linkedRelated = related.entities[relatedId][related.linkedKey];
 
                 if (isRelatedEntity(linkedRelated)) {
-                    linkedRelated.id = entity.id;
-                    linkedRelated.entity = entity;
+                    related.entities[relatedId][related.linkedKey] = {
+                        ...linkedRelated,
+                        id: entity.id,
+                        entity
+                    };
                 } else if (isRelatedEntities(linkedRelated)) {
-                    linkedRelated.entities[entity.id as number] = entity;
+                    related.entities[relatedId][related.linkedKey] = {
+                        ...linkedRelated,
+                        entities: {
+                            ...linkedRelated.entities,
+                            [entity.id as number]: entity
+                        }
+                    };
                 }
             }
         }
