@@ -54,6 +54,8 @@ function getEntityFromAction(action: any, id: number): Entity | null {
 }
 
 function updateEntities<T extends Entity>(state: EntitiesState<T>, action: Events.EntityActions<T>): EntitiesState<T> {
+    const updated: {[key: number]: T} = {};
+
     for (const id in state.data) {
         if (state.data.hasOwnProperty(id) === false) {
             continue;
@@ -96,6 +98,8 @@ function updateEntities<T extends Entity>(state: EntitiesState<T>, action: Event
                             entity: null
                         };
                     }
+
+                    updated[id] = entity;
                 }
             } else if (isRelatedEntities(entity[key])) {
                 const related = entity[key];
@@ -140,16 +144,30 @@ function updateEntities<T extends Entity>(state: EntitiesState<T>, action: Event
                                 entities: updatedEntities
                             };
                         }
+
+                        updated[id] = entity;
                     }
                 }
             }
         }
     }
 
-    return state;
+    if (Object.keys(updated).length === 0) {
+        return state;
+    }
+
+    return {
+        ...state,
+        data: {
+            ...state.data,
+            ...updated
+        }
+    };
 }
 
 function updateDeletedEntity<T extends Entity>(state: EntitiesState<T>, action: Events.DeleteEntityAction): EntitiesState<T> {
+    const updated: {[key: number]: T} = {};
+
     for (const id in state.data) {
         if (state.data.hasOwnProperty(id) === false) {
             continue;
@@ -169,6 +187,8 @@ function updateDeletedEntity<T extends Entity>(state: EntitiesState<T>, action: 
                     id: null,
                     entity: null
                 };
+
+                updated[id] = entity;
             } else if (isRelatedEntities(entity[key])) {
                 const related = entity[key];
                 if (related.table !== action.table) {
@@ -181,14 +201,26 @@ function updateDeletedEntity<T extends Entity>(state: EntitiesState<T>, action: 
                     ...related,
                     entities: updatedEntities
                 };
+
+                updated[id] = entity;
             }
         }
     }
 
-    return state;
+    if (Object.keys(updated).length === 0) {
+        return state;
+    }
+
+    return {
+        ...state,
+        data: {
+            ...state.data,
+            ...updated
+        }
+    };
 }
 
-function updateRelatedEntity<T extends Entity>(state: EntitiesState<T>, entity: Entity): EntitiesState<T> {
+function updateRelatedEntity<T extends Entity>(state: EntitiesState<T>, entity: Entity) {
     for (const key in entity) {
         if (isRelatedEntity(entity[key])) {
             const related = entity[key];
@@ -244,8 +276,6 @@ function updateRelatedEntity<T extends Entity>(state: EntitiesState<T>, entity: 
             }
         }
     }
-
-    return state;
 }
 
 interface EntitiesState<T extends Entity> {
@@ -282,12 +312,12 @@ export default function reducer<T extends Entity>(table: string) {
 
                 for (const id in entities) {
                     if (entities.hasOwnProperty(id)) {
-                        state = updateRelatedEntity<T>(state, entities[id]);
+                        updateRelatedEntity<T>(state, entities[id]);
                     }
                 }
             } else {
                 const entity = (action as Events.SetEntityAction<Entity>).entity;
-                state = updateRelatedEntity<T>(state, entity);
+                updateRelatedEntity<T>(state, entity);
             }
 
             return updateEntities<T>(state, action);
