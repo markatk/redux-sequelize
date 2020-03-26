@@ -33,7 +33,7 @@ export function toAnimal(data: Model): Animal {
         id: data.get('id') as number,
         name: data.get('name') as string,
         workId: data.get('workId') as number,
-        appointments: mapRelatedEntities<Project>('projects', data.get('projects') as Project[])
+        projects: mapRelatedEntities<Project>('projects', data.get('projects') as Project[], 'workers')
     };
 }
 ```
@@ -59,7 +59,7 @@ const {
     getEntities: getWorkers,
     getEntity: getWorker,
     setEntity: setWorker
-} = createActions<Worker>(database.sequelize, 'workers', toWorker, include);
+} = createActions<Worker>(() => database.sequelize, 'workers', toWorker, include);
 
 export {
     createWorker,
