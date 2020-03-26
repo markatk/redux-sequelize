@@ -64,11 +64,16 @@ describe('entity reducer', () => {
     });
 
     it('updating failed decreases counter', () => {
-        expect(workerReducer({
+        const state = {
             updating: 1,
             data: {},
             relatedTables: []
-        }, updatingEntitiesFailed(table, null, null))).toEqual({
+        };
+
+        const newState = workerReducer(state, updatingEntitiesFailed(table, null, null));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {},
             relatedTables: []
@@ -85,11 +90,16 @@ describe('entity reducer', () => {
             projects: createRelatedEntities('projects', 'workers')
         };
 
-        expect(workerReducer({
+        const state = {
             updating: 1,
             data: {},
             relatedTables: []
-        }, setEntity(table, worker))).toEqual({
+        };
+
+        const newState = workerReducer(state, setEntity(table, worker));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [worker.id]: worker
@@ -108,7 +118,7 @@ describe('entity reducer', () => {
             projects: createRelatedEntities('projects', 'workers')
         };
 
-        expect(workerReducer({
+        const state = {
             updating: 1,
             data: {
                 [worker.id]: {
@@ -118,7 +128,12 @@ describe('entity reducer', () => {
                 }
             },
             relatedTables: []
-        }, setEntity(table, worker))).toEqual({
+        };
+
+        const newState = workerReducer(state, setEntity(table, worker));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [worker.id]: worker
@@ -147,11 +162,16 @@ describe('entity reducer', () => {
             }
         ];
 
-        expect(workerReducer({
+        const state = {
             updating: 1,
             data: {},
             relatedTables: []
-        }, setEntities(table, workers))).toEqual({
+        };
+
+        const newState = workerReducer(state, setEntities(table, workers));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [workers[0].id]: workers[0],
@@ -162,7 +182,7 @@ describe('entity reducer', () => {
     });
 
     it('delete entity action', () => {
-        expect(workerReducer({
+        const state = {
             updating: 1,
             data: {
                 [1]: {
@@ -175,7 +195,12 @@ describe('entity reducer', () => {
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, deleteEntity(table, 1))).toEqual({
+        };
+
+        const newState = workerReducer(state, deleteEntity(table, 1));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {},
             relatedTables: ['workers', 'departments', 'projects']
@@ -183,7 +208,7 @@ describe('entity reducer', () => {
     });
 
     it('delete invalid entity', () => {
-        expect(workerReducer({
+        const state = {
             updating: 1,
             data: {
                 [1]: {
@@ -196,7 +221,12 @@ describe('entity reducer', () => {
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, deleteEntity(table, 2))).toEqual({
+        };
+
+        const newState = workerReducer(state, deleteEntity(table, 2));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [1]: {
@@ -213,7 +243,7 @@ describe('entity reducer', () => {
     });
 
     it('update existing entity in state', () => {
-        expect(workerReducer({
+        let state = {
             updating: 0,
             data: {
                 [1]: {
@@ -226,10 +256,15 @@ describe('entity reducer', () => {
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, setEntity('departments', {
+        };
+
+        let newState = workerReducer(state, setEntity('departments', {
             id: 1,
             name: 'Development'
-        }))).toEqual({
+        }));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [1]: {
@@ -252,7 +287,7 @@ describe('entity reducer', () => {
             relatedTables: ['workers', 'departments', 'projects']
         });
 
-        expect(workerReducer({
+        state = {
             updating: 0,
             data: {
                 [1]: {
@@ -265,12 +300,17 @@ describe('entity reducer', () => {
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, setEntities('departments', [
+        };
+
+        newState = workerReducer(state, setEntities('departments', [
             {
                 id: 1,
                 name: 'Development'
             }
-        ]))).toEqual({
+        ]));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [1]: {
@@ -293,7 +333,7 @@ describe('entity reducer', () => {
             relatedTables: ['workers', 'departments', 'projects']
         });
 
-        expect(workerReducer({
+        state = {
             updating: 0,
             data: {
                 [1]: {
@@ -306,10 +346,15 @@ describe('entity reducer', () => {
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, setEntity('projects', {
+        };
+
+        newState = workerReducer(state, setEntity('projects', {
             id: 1,
             name: 'Project Deep'
-        }))).toEqual({
+        }));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [1]: {
@@ -335,7 +380,7 @@ describe('entity reducer', () => {
     });
 
     it('no update on existing entity in state', () => {
-        expect(workerReducer({
+        let state = {
             updating: 0,
             data: {
                 [1]: {
@@ -348,10 +393,15 @@ describe('entity reducer', () => {
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, setEntity('projects', {
+        };
+
+        let newState = workerReducer(state, setEntity('projects', {
             id: 1,
             name: 'Project Deep'
-        }))).toEqual({
+        }));
+
+        expect(newState).toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [1]: {
@@ -366,7 +416,7 @@ describe('entity reducer', () => {
             relatedTables: ['workers', 'departments', 'projects']
         });
 
-        expect(workerReducer({
+        state = {
             updating: 0,
             data: {
                 [1]: {
@@ -379,7 +429,12 @@ describe('entity reducer', () => {
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, updateEntities('projects'))).toEqual({
+        };
+
+        newState = workerReducer(state, updateEntities('projects'));
+
+        expect(newState).toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [1]: {
@@ -396,7 +451,7 @@ describe('entity reducer', () => {
     });
 
     it('do not update entity on invalid related entity', () => {
-        expect(workerReducer({
+        const state = {
             updating: 0,
             data: {
                 [1]: {
@@ -409,10 +464,15 @@ describe('entity reducer', () => {
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, setEntity('departments', {
+        };
+
+        const newState = workerReducer(state, setEntity('departments', {
             id: 2,
             name: 'Top-Secret'
-        }))).toEqual({
+        }));
+
+        expect(newState).toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [1]: {
@@ -429,7 +489,7 @@ describe('entity reducer', () => {
     });
 
     it('delete related entity', () => {
-        expect(workerReducer({
+        let state = {
             updating: 0,
             data: {
                 [1]: {
@@ -450,7 +510,12 @@ describe('entity reducer', () => {
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, deleteEntity('departments', 1))).toEqual({
+        };
+
+        let newState = workerReducer(state, deleteEntity('departments', 1));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [1]: {
@@ -465,7 +530,7 @@ describe('entity reducer', () => {
             relatedTables: ['workers', 'departments', 'projects']
         });
 
-        expect(workerReducer({
+        state = {
             updating: 0,
             data: {
                 [1]: {
@@ -490,7 +555,12 @@ describe('entity reducer', () => {
                 }
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, deleteEntity('projects', 1))).toEqual({
+        };
+
+        newState = workerReducer(state, deleteEntity('projects', 1));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [1]: {
@@ -536,13 +606,18 @@ describe('entity reducer', () => {
             }
         };
 
-        expect(workerReducer({
+        const state = {
             updating: 0,
             data: {
                 [1]: worker
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, setEntity('departments', department))).toEqual({
+        };
+
+        const newState = workerReducer(state, setEntity('departments', department));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [1]: {
@@ -593,14 +668,19 @@ describe('entity reducer', () => {
         workers[0].department.id = department.id;
         workers[0].department.entity = department;
 
-        expect(workerReducer({
+        const state = {
             updating: 0,
             data: {
                 [workers[0].id]: workers[0],
                 [workers[1].id]: workers[1]
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, setEntity('departments', department))).toEqual({
+        };
+
+        const newState = workerReducer(state, setEntity('departments', department));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [workers[0].id]: {
@@ -646,13 +726,18 @@ describe('entity reducer', () => {
             }
         };
 
-        expect(workerReducer({
+        const state = {
             updating: 0,
             data: {
                 [1]: worker
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, setEntity('projects', project))).toEqual({
+        };
+
+        const newState = workerReducer(state, setEntity('projects', project));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [1]: {
@@ -693,19 +778,24 @@ describe('entity reducer', () => {
 
         worker.department.entity = department;
 
-        expect(workerReducer({
+        const state = {
             updating: 0,
             data: {
                 [1]: worker
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, setEntity('departments', {
+        };
+
+        const newState = workerReducer(state, setEntity('departments', {
             ...department,
             workers: {
                 ...department.workers,
                 entities: {}
             }
-        }))).toEqual({
+        }));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [1]: {
@@ -745,19 +835,24 @@ describe('entity reducer', () => {
 
         worker.projects.entities[1] = project;
 
-        expect(workerReducer({
+        const state = {
             updating: 0,
             data: {
                 [1]: worker
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, setEntity('projects', {
+        };
+
+        const newState = workerReducer(state, setEntity('projects', {
             ...project,
             workers: {
                 ...project.workers,
                 entities: {}
             }
-        }))).toEqual({
+        }));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [1]: {
@@ -794,13 +889,18 @@ describe('entity reducer', () => {
 
         worker.department.entity = department;
 
-        expect(workerReducer({
+        const state = {
             updating: 0,
             data: {
                 [1]: worker
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, deleteEntity('departments', 1))).toEqual({
+        };
+
+        const newState = workerReducer(state, deleteEntity('departments', 1));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [1]: {
@@ -840,13 +940,18 @@ describe('entity reducer', () => {
 
         worker.projects.entities[1] = project;
 
-        expect(workerReducer({
+        const state = {
             updating: 0,
             data: {
                 [1]: worker
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, deleteEntity('projects', 1))).toEqual({
+        };
+
+        const newState = workerReducer(state, deleteEntity('projects', 1));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [1]: {
@@ -881,13 +986,18 @@ describe('entity reducer', () => {
 
         department.workers.entities[1] = worker;
 
-        expect(workerReducer({
+        const state = {
             updating: 0,
             data: {
                 [worker.id]: worker
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, setEntity('departments', department))).toEqual({
+        };
+
+        const newState = workerReducer(state, setEntity('departments', department));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [worker.id]: {
@@ -926,13 +1036,18 @@ describe('entity reducer', () => {
 
         project.workers.entities[1] = worker;
 
-        expect(workerReducer({
+        const state = {
             updating: 0,
             data: {
                 [worker.id]: worker
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, setEntity('projects', project))).toEqual({
+        };
+
+        const newState = workerReducer(state, setEntity('projects', project));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [worker.id]: {
@@ -974,13 +1089,18 @@ describe('entity reducer', () => {
         worker.department.entity = department;
         department.workers.entities[1] = worker;
 
-        expect(workerReducer({
+        const state = {
             updating: 0,
             data: {
                 [worker.id]: worker
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, deleteEntity('departments', 1))).toEqual({
+        };
+
+        const newState = workerReducer(state, deleteEntity('departments', 1));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [worker.id]: {
@@ -1020,13 +1140,18 @@ describe('entity reducer', () => {
         worker.projects.entities[1] = project;
         project.workers.entities[1] = worker;
 
-        expect(workerReducer({
+        const state = {
             updating: 0,
             data: {
                 [worker.id]: worker
             },
             relatedTables: ['workers', 'departments', 'projects']
-        }, deleteEntity('projects', 1))).toEqual({
+        };
+
+        const newState = workerReducer(state, deleteEntity('projects', 1));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
             updating: 0,
             data: {
                 [worker.id]: {
