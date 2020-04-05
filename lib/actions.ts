@@ -137,8 +137,6 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
                     entity = await model.findByPk(entity.get('id') as number, { include: includeablesToSequelizeInclude(sequelize, include) }) as Model;
 
                     // set related entities
-                    let changed = false;
-
                     for (const includeable of include) {
                         const related = data[includeable.key];
                         if (related == null) {
@@ -163,12 +161,6 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
                             // set internal relation
                             await association.set(entity, related.id);
                         }
-
-                        changed = true;
-                    }
-
-                    if (changed) {
-                        await entity.save();
                     }
 
                     dispatch(setEntity<T>(table, toEntity(entity)));
@@ -241,6 +233,10 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
                         }
                     }
 
+                    if (entity.changed() !== false) {
+                        await entity.save();
+                    }
+
                     // update related entities
                     for (const includeable of include) {
                         const related = data[includeable.key];
@@ -281,8 +277,6 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
                             await association.set(entity, related.id);
                         }
                     }
-
-                    await entity.save();
 
                     dispatch(setEntity(table, toEntity(entity)));
                 } catch (err) {
