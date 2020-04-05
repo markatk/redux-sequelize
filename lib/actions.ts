@@ -32,7 +32,7 @@ import _ from 'lodash';
 
 import * as Events from './events';
 import { Entity, Includeable, ToEntity } from './types';
-import { includeablesToSequelizeInclude, includeablesToEntityStore } from './helpers';
+import { includeablesToSequelizeInclude, includeablesToEntityStore, arrayEquals } from './helpers';
 
 export function updateEntities(table: string): Events.UpdatingEntitiesAction {
     return {
@@ -252,6 +252,13 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
                         const association = model.associations[includeable.key] as any;
 
                         if (association.isMultiAssociation) {
+                            // do not update relation if nothing changed
+                            const currentRelatedEntities = await association.get(entity);
+                            const currentKeys = currentRelatedEntities.map((ent: Entity) => ent.get('id').toString());
+                            if (arrayEquals(currentKeys, Object.keys(related.entities))) {
+                                continue;
+                            }
+
                             // set external relation
                             entity.set(includeable.key as any, Object.keys(related.entities).map(id => ({ id })));
 
@@ -260,6 +267,13 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
 
                             await association.set(entity, keys);
                         } else {
+                            // do not update relation if nothing changed
+                            const currentRelatedEntity = await association.get(entity);
+                            const currentId = currentRelatedEntity != null ? currentRelatedEntity.get('id') as number : null;
+                            if (currentId == related.id) {
+                                continue;
+                            }
+
                             // set external relation
                             entity.set(includeable.key as any, data[includeable.key]);
 

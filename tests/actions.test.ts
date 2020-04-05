@@ -679,6 +679,49 @@ describe('entity actions', () => {
 
         expect(await database.model(table).count()).toBe(1);
     });
+
+    it('do not update relations on no change', async () => {
+        const projectA = await database.model('projects').create({ name: 'Project A' });
+        const projectB = await database.model('projects').create({ name: 'Project B' });
+        const workerEntity = await database.model(table).create(worker);
+
+        const association = database.model(table).associations.projects as any;
+        await association.set(workerEntity, [projectA.get('id') as number, projectB.get('id') as number]);
+
+        expect(await database.model(table).count()).toBe(1);
+        expect(await database.model('projects').count()).toBe(2);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.SET_ENTITY,
+                table,
+                entity: {
+                    ...worker,
+                    name: 'Steven',
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number, projectB.get('id') as number])
+                }
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(setWorker({
+            ...worker,
+            name: 'Steven',
+            boss: createRelatedEntity('workers'),
+            department: createRelatedEntity('departments', 'workers'),
+            projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number, projectB.get('id') as number])
+        }));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(1);
+    });
 });
 
 describe('internal actions', () => {
