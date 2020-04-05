@@ -691,6 +691,8 @@ describe('entity actions', () => {
         expect(await database.model(table).count()).toBe(1);
         expect(await database.model('projects').count()).toBe(2);
 
+        const [beforeResult] = await database.query(`SELECT * FROM 'WorkerProject' WHERE workerId = ${workerEntity.get('id')}`);
+
         const expectedActions = [
             {
                 type: Events.UPDATING_ENTITIES,
@@ -721,6 +723,10 @@ describe('entity actions', () => {
         expect(store.getActions()).toEqual(expectedActions);
 
         expect(await database.model(table).count()).toBe(1);
+        
+        // assure the association was not recreated
+        const [afterResult] = await database.query(`SELECT * FROM 'WorkerProject' WHERE workerId = ${workerEntity.get('id')}`);
+        expect(beforeResult).toEqual(afterResult);
     });
 });
 
