@@ -115,7 +115,8 @@ describe('entity actions', () => {
                     ...worker,
                     boss: createRelatedEntity('workers'),
                     department: createRelatedEntity('departments', 'workers'),
-                    projects: createRelatedEntities('projects', 'workers')
+                    projects: createRelatedEntities('projects', 'workers'),
+                    workPlace: createRelatedEntity('workPlaces', 'worker')
                 }
             }
         ];
@@ -166,8 +167,17 @@ describe('entity actions', () => {
                 table: 'workers'
             },
             {
+                type: Events.UPDATING_ENTITIES,
+                table: 'workPlaces'
+            },
+            {
                 type: Events.SET_ENTITIES,
                 table: 'workers',
+                entities: []
+            },
+            {
+                type: Events.SET_ENTITIES,
+                table: 'workPlaces',
                 entities: []
             },
             {
@@ -177,7 +187,8 @@ describe('entity actions', () => {
                     ...worker,
                     boss: createRelatedEntity('workers'),
                     department: createRelatedEntity('departments', 'workers'),
-                    projects: createRelatedEntities('projects', 'workers')
+                    projects: createRelatedEntities('projects', 'workers'),
+                    workPlace: createRelatedEntity('workPlaces', 'worker')
                 }
             }
         ];
@@ -228,7 +239,8 @@ describe('entity actions', () => {
                     name: 'Mike',
                     boss: createRelatedEntity('workers'),
                     department: createRelatedEntity('departments', 'workers'),
-                    projects: createRelatedEntities('projects', 'workers')
+                    projects: createRelatedEntities('projects', 'workers'),
+                    workPlace: createRelatedEntity('workPlaces', 'worker')
                 }
             }
         ];
@@ -297,9 +309,18 @@ describe('entity actions', () => {
                 table: 'workers'
             },
             {
+                type: Events.UPDATING_ENTITIES,
+                table: 'workPlaces'
+            },
+            {
                 type: Events.SET_ENTITIES,
                 table: 'workers',
                 entities: [toWorker(bossEntity)]
+            },
+            {
+                type: Events.SET_ENTITIES,
+                table: 'workPlaces',
+                entities: []
             },
             {
                 type: Events.SET_ENTITY,
@@ -308,7 +329,8 @@ describe('entity actions', () => {
                     ...worker,
                     boss: createRelatedEntity('workers', null, boss.id),
                     department: createRelatedEntity('departments', 'workers'),
-                    projects: createRelatedEntities('projects', 'workers')
+                    projects: createRelatedEntities('projects', 'workers'),
+                    workPlace: createRelatedEntity('workPlaces', 'worker')
                 }
             }
         ];
@@ -345,8 +367,17 @@ describe('entity actions', () => {
                 table: 'workers'
             },
             {
+                type: Events.UPDATING_ENTITIES,
+                table: 'workPlaces'
+            },
+            {
                 type: Events.SET_ENTITIES,
                 table: 'workers',
+                entities: []
+            },
+            {
+                type: Events.SET_ENTITIES,
+                table: 'workPlaces',
                 entities: []
             },
             {
@@ -356,7 +387,8 @@ describe('entity actions', () => {
                     ...worker,
                     boss: createRelatedEntity('workers'),
                     department: createRelatedEntity('departments', 'workers'),
-                    projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number, projectB.get('id') as number])
+                    projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number, projectB.get('id') as number]),
+                    workPlace: createRelatedEntity('workPlaces', 'worker')
                 }
             }
         ];
@@ -384,8 +416,17 @@ describe('entity actions', () => {
                 table: 'workers'
             },
             {
+                type: Events.UPDATING_ENTITIES,
+                table: 'workPlaces'
+            },
+            {
                 type: Events.SET_ENTITIES,
                 table: 'workers',
+                entities: []
+            },
+            {
+                type: Events.SET_ENTITIES,
+                table: 'workPlaces',
                 entities: []
             },
             {
@@ -396,13 +437,15 @@ describe('entity actions', () => {
                         ...worker,
                         boss: createRelatedEntity('workers'),
                         department: createRelatedEntity('departments', 'workers'),
-                        projects: createRelatedEntities('projects', 'workers')
+                        projects: createRelatedEntities('projects', 'workers'),
+                        workPlace: createRelatedEntity('workPlaces', 'worker')
                     },
                     {
                         ...boss,
                         boss: createRelatedEntity('workers'),
                         department: createRelatedEntity('departments', 'workers'),
-                        projects: createRelatedEntities('projects', 'workers')
+                        projects: createRelatedEntities('projects', 'workers'),
+                        workPlace: createRelatedEntity('workPlaces', 'worker')
                     }
                 ]
             }
@@ -440,8 +483,17 @@ describe('entity actions', () => {
                 table: 'workers'
             },
             {
+                type: Events.UPDATING_ENTITIES,
+                table: 'workPlaces'
+            },
+            {
                 type: Events.SET_ENTITIES,
                 table: 'workers',
+                entities: []
+            },
+            {
+                type: Events.SET_ENTITIES,
+                table: 'workPlaces',
                 entities: []
             },
             {
@@ -452,13 +504,15 @@ describe('entity actions', () => {
                         ...worker,
                         boss: createRelatedEntity('workers'),
                         department: createRelatedEntity('departments', 'workers'),
-                        projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number])
+                        projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number]),
+                        workPlace: createRelatedEntity('workPlaces', 'worker')
                     },
                     {
                         ...boss,
                         boss: createRelatedEntity('workers'),
                         department: createRelatedEntity('departments', 'workers'),
-                        projects: createRelatedEntities('projects', 'workers', [projectB.get('id') as number])
+                        projects: createRelatedEntities('projects', 'workers', [projectB.get('id') as number]),
+                        workPlace: createRelatedEntity('workPlaces', 'worker')
                     }
                 ]
             }
@@ -489,7 +543,8 @@ describe('entity actions', () => {
                     ...worker,
                     boss: createRelatedEntity('workers', null, boss.id),
                     department: createRelatedEntity('departments', 'workers'),
-                    projects: createRelatedEntities('projects', 'workers')
+                    projects: createRelatedEntities('projects', 'workers'),
+                    workPlace: createRelatedEntity('workPlaces', 'worker')
                 }
             }
         ];
@@ -533,7 +588,8 @@ describe('entity actions', () => {
                     ...worker,
                     boss: createRelatedEntity('workers'),
                     department: createRelatedEntity('departments', 'workers'),
-                    projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number, projectB.get('id') as number])
+                    projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number, projectB.get('id') as number]),
+                    workPlace: createRelatedEntity('workPlaces', 'worker')
                 }
             }
         ];
@@ -572,7 +628,8 @@ describe('entity actions', () => {
                     ...worker,
                     boss: createRelatedEntity('workers', null, boss.id),
                     department: createRelatedEntity('departments', 'workers'),
-                    projects: createRelatedEntities('projects', 'workers')
+                    projects: createRelatedEntities('projects', 'workers'),
+                    workPlace: createRelatedEntity('workPlaces', 'worker')
                 }
             }
         ];
@@ -614,7 +671,8 @@ describe('entity actions', () => {
                     ...worker,
                     boss: createRelatedEntity('workers'),
                     department: createRelatedEntity('departments', 'workers'),
-                    projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number, projectB.get('id') as number])
+                    projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number, projectB.get('id') as number]),
+                    workPlace: createRelatedEntity('workPlaces', 'worker')
                 }
             }
         ];
@@ -703,7 +761,8 @@ describe('entity actions', () => {
                     name: 'Steven',
                     boss: createRelatedEntity('workers'),
                     department: createRelatedEntity('departments', 'workers'),
-                    projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number])
+                    projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number]),
+                    workPlace: createRelatedEntity('workPlaces', 'worker')
                 }
             }
         ];

@@ -36,11 +36,24 @@ class Worker extends Model {
     public readonly projects?: Project[];
     public readonly department?: Department[];
     public readonly boss?: Worker;
+    public readonly workPlace?: WorkPlace;
 
     public static associations: {
         projects: Association<Worker, Project>;
         department: Association<Worker, Department>;
         boss: Association<Worker, Worker>;
+        workPlace: Association<Worker, WorkPlace>;
+    };
+}
+
+class WorkPlace extends Model {
+    public id: number;
+    public name: string;
+
+    public readonly worker?: Worker;
+
+    public static associations: {
+        worker: Association<WorkPlace, Worker>;
     };
 }
 
@@ -81,6 +94,13 @@ export default function createDatabase(): Sequelize {
         modelName: 'workers'
     });
 
+    WorkPlace.init({
+        name: DataTypes.STRING
+    }, {
+        sequelize,
+        modelName: 'workPlaces'
+    })
+
     Project.init({
         name: DataTypes.STRING
     }, {
@@ -99,6 +119,7 @@ export default function createDatabase(): Sequelize {
     Worker.belongsToMany(Project, { as: 'projects', through: 'WorkerProject', foreignKey: 'workerId' });
     Worker.belongsTo(Department, { as: 'department' });
     Worker.belongsTo(Worker, { as: 'boss' });
+    Worker.hasOne(WorkPlace, { as: 'workPlace'});
 
     Project.belongsToMany(Worker, { as: 'workers', through: 'WorkerProject', foreignKey: 'projectId' });
 

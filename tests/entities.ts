@@ -36,6 +36,7 @@ interface WorkerModel extends Entity {
     projects: RelatedEntities<Project>;
     department: RelatedEntity<Department>;
     boss: RelatedEntity<Worker>;
+    workPlace: RelatedEntity<WorkPlace>;
 }
 
 export type Worker = Partial<WorkerModel>;
@@ -48,14 +49,36 @@ export function toWorker(data: Model): Worker {
 
         projects: mapRelatedEntities<Project>('projects', data.get('projects') as Project[], 'workers'),
         department: mapRelatedEntity<Department>('departments', data.get('department') as Department, 'workers'),
-        boss: mapRelatedEntity<Worker>('workers', data.get('boss') as Worker)
+        boss: mapRelatedEntity<Worker>('workers', data.get('boss') as Worker),
+        workPlace: mapRelatedEntity<WorkPlace>('workPlaces', data.get('workPlace') as WorkPlace, 'worker')
     };
 }
 
 export const workerInclude: Includeable[] = [
     { table: 'projects', key: 'projects', linkedKey: 'workers' },
     { table: 'departments', key: 'department', linkedKey: 'workers' },
-    { table: 'workers', key: 'boss', toEntity: toWorker }
+    { table: 'workers', key: 'boss', toEntity: toWorker },
+    { table: 'workPlaces', key: 'workPlace', linkedKey: 'worker', toEntity: toWorkPlace }
+];
+
+interface WorkPlaceModel extends Entity {
+    name: string;
+
+    worker: RelatedEntity<Worker>;
+}
+
+export type WorkPlace = Partial<WorkPlaceModel>;
+
+export function toWorkPlace(data: Model): WorkPlace {
+    return {
+        id: data.get('id') as number,
+        name: data.get('name') as string,
+        worker: mapRelatedEntity<Worker>('workers', data.get('worker') as Worker, 'workPlace')
+    };
+}
+
+export const workPlaceInclude: Includeable[] = [
+    { table: 'workers', key: 'worker', linkedKey: 'workPlace' }
 ];
 
 interface ProjectModel extends Entity {
