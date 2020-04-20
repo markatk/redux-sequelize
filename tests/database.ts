@@ -119,7 +119,7 @@ export default function createDatabase(): Sequelize {
     Worker.belongsToMany(Project, { as: 'projects', through: 'WorkerProject', foreignKey: 'workerId' });
     Worker.belongsTo(Department, { as: 'department' });
     Worker.belongsTo(Worker, { as: 'boss' });
-    Worker.hasOne(WorkPlace, { as: 'workPlace'});
+    Worker.hasOne(WorkPlace, { as: 'workPlace' });
 
     Project.belongsToMany(Worker, { as: 'workers', through: 'WorkerProject', foreignKey: 'projectId' });
 

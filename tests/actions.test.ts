@@ -29,9 +29,9 @@
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 
-import { createActions, Events, createRelatedEntity, createRelatedEntities } from '../lib';
+import { createActions, Events, createRelatedEntity, createRelatedEntities, includeablesToSequelizeInclude } from '../lib';
 import { updateEntities, updatingEntitiesFailed, setEntity, setEntities, deleteEntity } from '../lib/actions';
-import { Worker, toWorker, workerInclude } from './entities';
+import { Worker, toWorker, workerInclude, workPlaceInclude, toWorkPlace, WorkPlace } from './entities';
 import createDatabase from './database';
 
 const table = 'workers';
@@ -44,6 +44,10 @@ const {
     getEntity: getWorker,
     setEntity: setWorker
 } = createActions<Worker>(() => database, table, toWorker, workerInclude);
+
+const {
+    setEntity: setWorkPlace
+} = createActions<WorkPlace>(() => database, 'workPlaces', toWorkPlace, workPlaceInclude);
 
 const worker = {
     id: 1,
@@ -566,6 +570,94 @@ describe('entity actions', () => {
         expect(result.get('bossId')).toBe(2);
 
         expect(await database.model(table).count()).toBe(2);
+    });
+
+    it('two-way set related entity', async () => {
+        const workPlace = {
+            id: 5,
+            name: '2nd floor'
+        };
+
+        await database.model(table).create(worker);
+        expect(await database.model(table).count()).toBe(1);
+
+        await database.model('workPlaces').create(workPlace);
+        expect(await database.model('workPlaces').count()).toBe(1);
+
+        let expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.SET_ENTITY,
+                table,
+                entity: {
+                    ...worker,
+                    boss: createRelatedEntity('workers', null),
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers'),
+                    workPlace: createRelatedEntity('workPlaces', 'worker', workPlace.id)
+                }
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(setWorker({
+            ...worker,
+            workPlace: {
+                id: workPlace.id,
+                table: 'workPlaces',
+                linkedKey: 'worker',
+                entity: null
+            }
+        }));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        let result = toWorker(await database.model(table).findByPk(worker.id, { include: includeablesToSequelizeInclude(database, workerInclude) }));
+        expect(result.workPlace.id).toBe(workPlace.id);
+
+        // Try same from other side
+        await database.model(table).truncate();
+        await database.model('workPlaces').truncate();
+
+        store.clearActions();
+
+        await database.model(table).create(worker);
+        expect(await database.model(table).count()).toBe(1);
+
+        await database.model('workPlaces').create(workPlace);
+        expect(await database.model('workPlaces').count()).toBe(1);
+
+        expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table: 'workPlaces'
+            },
+            {
+                type: Events.SET_ENTITY,
+                table: 'workPlaces',
+                entity: {
+                    ...workPlace,
+                    worker: createRelatedEntity('workers', 'workPlace', worker.id)
+                }
+            }
+        ];
+
+        await store.dispatch(setWorkPlace({
+            ...workPlace,
+            worker: {
+                id: worker.id,
+                table: 'workers',
+                linkedKey: 'workPlace',
+                entity: null
+            }
+        }));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        result = toWorkPlace(await database.model('workPlaces').findByPk(workPlace.id, { include: includeablesToSequelizeInclude(database, workPlaceInclude) }));
+        expect(result.worker.id).toBe(worker.id);
     });
 
     it('set related entities', async () => {
