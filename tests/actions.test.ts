@@ -682,16 +682,13 @@ describe('entity actions', () => {
 
     it('do not update relations on no change', async () => {
         const projectA = await database.model('projects').create({ name: 'Project A' });
-        const projectB = await database.model('projects').create({ name: 'Project B' });
         const workerEntity = await database.model(table).create(worker);
 
         const association = database.model(table).associations.projects as any;
-        await association.set(workerEntity, [projectA.get('id') as number, projectB.get('id') as number]);
+        await association.set(workerEntity, [projectA.get('id') as number]);
 
         expect(await database.model(table).count()).toBe(1);
-        expect(await database.model('projects').count()).toBe(2);
-
-        const [beforeResult] = await database.query(`SELECT * FROM 'WorkerProject' WHERE workerId = ${workerEntity.get('id')}`);
+        expect(await database.model('projects').count()).toBe(1);
 
         const expectedActions = [
             {
@@ -706,7 +703,7 @@ describe('entity actions', () => {
                     name: 'Steven',
                     boss: createRelatedEntity('workers'),
                     department: createRelatedEntity('departments', 'workers'),
-                    projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number, projectB.get('id') as number])
+                    projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number])
                 }
             }
         ];
@@ -715,18 +712,11 @@ describe('entity actions', () => {
 
         await store.dispatch(setWorker({
             ...worker,
-            name: 'Steven',
-            boss: createRelatedEntity('workers'),
-            department: createRelatedEntity('departments', 'workers'),
-            projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number, projectB.get('id') as number])
+            name: 'Steven'
         }));
         expect(store.getActions()).toEqual(expectedActions);
 
         expect(await database.model(table).count()).toBe(1);
-        
-        // assure the association was not recreated
-        const [afterResult] = await database.query(`SELECT * FROM 'WorkerProject' WHERE workerId = ${workerEntity.get('id')}`);
-        expect(beforeResult).toEqual(afterResult);
     });
 });
 
