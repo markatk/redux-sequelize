@@ -27,7 +27,7 @@
  */
 
 import { Dispatch } from 'redux';
-import { Sequelize, WhereOptions, Model } from 'sequelize';
+import { Sequelize, WhereOptions, Model, ModelCtor } from 'sequelize';
 import _ from 'lodash';
 
 import * as Events from './events';
@@ -122,6 +122,52 @@ export function dispatchIncludedEntities<T extends Entity>(
     return data;
 }
 
+async function updateAssociations<T extends Entity>(model: ModelCtor<Model>, entity: Model, data: T, include: Includeable[], checkCurrent: boolean = false) {
+    for (const includeable of include) {
+        const related = data[includeable.key];
+        if (related == null) {
+            continue;
+        }
+
+        // update keys for each association
+        const association = model.associations[includeable.key] as any;
+
+        if (association.isMultiAssociation) {
+            if (checkCurrent) {
+                // do not update relation if nothing changed
+                const currentRelatedEntities = await association.get(entity);
+                const currentKeys = currentRelatedEntities.map((ent: Entity) => ent.get('id').toString());
+                if (arrayEquals(currentKeys, Object.keys(related.entities))) {
+                    continue;
+                }
+            }
+
+            // set external relation
+            entity.set(includeable.key as any, Object.keys(related.entities).map(id => ({ id })));
+
+            // set internal relation
+            const keys = Object.keys(related.entities);
+
+            await association.set(entity, keys);
+        } else {
+            if (checkCurrent) {
+                // do not update relation if nothing changed
+                const currentRelatedEntity = await association.get(entity);
+                const currentId = currentRelatedEntity != null ? currentRelatedEntity.get('id') as number : null;
+                if (currentId === related.id) {
+                    continue;
+                }
+            }
+
+            // set external relation
+            entity.set(includeable.key as any, data[includeable.key]);
+
+            // set internal relation
+            await association.set(entity, related.id);
+        }
+    }
+}
+
 export function createActions<T extends Entity>(databaseCallback: () => Sequelize, table: string, toEntity: ToEntity<T>, include: Includeable[] = []) {
     return {
         createEntity: (data: T) => {
@@ -137,31 +183,7 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
                     entity = await model.findByPk(entity.get('id') as number, { include: includeablesToSequelizeInclude(sequelize, include) }) as Model;
 
                     // set related entities
-                    for (const includeable of include) {
-                        const related = data[includeable.key];
-                        if (related == null) {
-                            continue;
-                        }
-
-                        // update keys for each association
-                        const association = model.associations[includeable.key] as any;
-
-                        if (association.isMultiAssociation) {
-                            // set external relation
-                            entity.set(includeable.key as any, Object.keys(related.entities).map(id => ({ id })));
-
-                            // set internal relation
-                            const keys = Object.keys(related.entities);
-
-                            await association.set(entity, keys);
-                        } else {
-                            // set external relation
-                            entity.set(includeable.key as any, data[includeable.key]);
-
-                            // set internal relation
-                            await association.set(entity, related.id);
-                        }
-                    }
+                    await updateAssociations(model, entity, data, include);
 
                     dispatch(setEntity<T>(table, toEntity(entity)));
                 } catch (err) {
@@ -233,50 +255,10 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
                         }
                     }
 
-                    if (entity.changed() !== false) {
-                        await entity.save();
-                    }
+                    await entity.save();
 
                     // update related entities
-                    for (const includeable of include) {
-                        const related = data[includeable.key];
-                        if (related == null) {
-                            continue;
-                        }
-
-                        // update keys for each association
-                        const association = model.associations[includeable.key] as any;
-
-                        if (association.isMultiAssociation) {
-                            // do not update relation if nothing changed
-                            const currentRelatedEntities = await association.get(entity);
-                            const currentKeys = currentRelatedEntities.map((ent: Entity) => ent.get('id').toString());
-                            if (arrayEquals(currentKeys, Object.keys(related.entities))) {
-                                continue;
-                            }
-
-                            // set external relation
-                            entity.set(includeable.key as any, Object.keys(related.entities).map(id => ({ id })));
-
-                            // set internal relation
-                            const keys = Object.keys(related.entities);
-
-                            await association.set(entity, keys);
-                        } else {
-                            // do not update relation if nothing changed
-                            const currentRelatedEntity = await association.get(entity);
-                            const currentId = currentRelatedEntity != null ? currentRelatedEntity.get('id') as number : null;
-                            if (currentId == related.id) {
-                                continue;
-                            }
-
-                            // set external relation
-                            entity.set(includeable.key as any, data[includeable.key]);
-
-                            // set internal relation
-                            await association.set(entity, related.id);
-                        }
-                    }
+                    await updateAssociations(model, entity, data, include, true);
 
                     dispatch(setEntity(table, toEntity(entity)));
                 } catch (err) {
