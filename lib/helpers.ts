@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-import { Includeable as SequelizeIncludeable, Sequelize, Model } from 'sequelize';
+import { Includeable as SequelizeIncludeable, Sequelize, Model, ModelCtor } from 'sequelize';
 
 import { Includeable, Entity, RelatedEntity, RelatedEntities } from './types';
 
@@ -54,17 +54,19 @@ export function isRelatedEntities(value: {[key: string]: any}): boolean {
     return value[`table`] != null && value[`entities`] != null;
 }
 
-export function includeablesToSequelizeInclude(sequelize: Sequelize, includeables: Includeable[]): SequelizeIncludeable[] {
-    return includeables.map(includeable => ({
-        as: includeable.key,
-        model: sequelize.model(includeable.table),
-        attributes: includeable.toEntity == null ? ['id'] : undefined
-    }));
+export function includeablesToSequelizeInclude(sequelize: Sequelize, model: ModelCtor<Model>, includeables: Includeable[]): SequelizeIncludeable[] {
+    return includeables
+        .filter(includeable => model.associations[includeable.key] != null)
+        .map(includeable => ({
+            as: includeable.key,
+            model: sequelize.model(includeable.table),
+            attributes: includeable.toEntity == null ? ['id'] : undefined
+        }));
 }
 
-export function includeablesToEntityStore(includeables: Includeable[]): {[table: string]: Entity[]} {
+export function includeablesToEntityStore(model: ModelCtor<Model>, includeables: Includeable[]): {[table: string]: Entity[]} {
     return includeables
-        .filter(includeable => includeable.toEntity != null)
+        .filter(includeable => model.associations[includeable.key] != null && includeable.toEntity != null)
         .reduce((data: {[table: string]: Entity[]}, includeable) => {
             data[includeable.table] = [];
 

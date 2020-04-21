@@ -32,7 +32,7 @@ import _ from 'lodash';
 
 import * as Events from './events';
 import { Entity, Includeable, ToEntity } from './types';
-import { includeablesToSequelizeInclude, includeablesToEntityStore, arrayEquals } from './helpers';
+import { includeablesToSequelizeInclude, includeablesToEntityStore, arrayEquals, isRelatedEntity } from './helpers';
 
 export function updateEntities(table: string): Events.UpdatingEntitiesAction {
     return {
@@ -81,11 +81,12 @@ export function deleteEntity(table: string, id: number): Events.DeleteEntityActi
 }
 
 export function dispatchIncludedEntities<T extends Entity>(
+    model: ModelCtor<Model>,
     dispatch: Dispatch<Events.EntityActions<T>>,
     entities: Model[],
     includeables: Includeable[]
 ): {[table: string]: Entity[]} {
-    const data = includeablesToEntityStore(includeables);
+    const data = includeablesToEntityStore(model, includeables);
 
     for (const table in data) {
         if (data.hasOwnProperty(table)) {
@@ -122,7 +123,14 @@ export function dispatchIncludedEntities<T extends Entity>(
     return data;
 }
 
-async function updateAssociations<T extends Entity>(model: ModelCtor<Model>, entity: Model, data: T, include: Includeable[], checkCurrent: boolean = false) {
+async function updateAssociations<T extends Entity>(
+    sequelize: Sequelize,
+    model: ModelCtor<Model>,
+    entity: Model,
+    data: T,
+    include: Includeable[],
+    checkCurrent: boolean = false
+) {
     for (const includeable of include) {
         const related = data[includeable.key];
         if (related == null) {
@@ -131,6 +139,26 @@ async function updateAssociations<T extends Entity>(model: ModelCtor<Model>, ent
 
         // update keys for each association
         const association = model.associations[includeable.key] as any;
+        if (association == null) {
+            // set relation on linked entity if there is any. Seems like it isn't required for related entities at all
+            if (related.linkedKey != null && isRelatedEntity(related)) {
+                const relatedModel = sequelize.model(related.table);
+                const relatedAssociation = relatedModel.associations[related.linkedKey] as any;
+                const relatedEntity = await relatedModel.findByPk(related.id);
+
+                if (relatedAssociation != null && relatedEntity != null) {
+                    const id = entity.get('id') as number;
+
+                    // set external relation
+                    entity.setDataValue(includeable.key as any, relatedEntity);
+
+                    // set internal relation
+                    await relatedAssociation.set(relatedEntity, id);
+                }
+            }
+
+            continue;
+        }
 
         if (association.isMultiAssociation) {
             if (checkCurrent) {
@@ -180,10 +208,10 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
 
                     // create entity and search for it to include related objects
                     let entity = await model.create(data);
-                    entity = await model.findByPk(entity.get('id') as number, { include: includeablesToSequelizeInclude(sequelize, include) }) as Model;
+                    entity = await model.findByPk(entity.get('id') as number, { include: includeablesToSequelizeInclude(sequelize, model, include) }) as Model;
 
                     // set related entities
-                    await updateAssociations(model, entity, data, include);
+                    await updateAssociations(sequelize, model, entity, data, include);
 
                     dispatch(setEntity<T>(table, toEntity(entity)));
                 } catch (err) {
@@ -199,14 +227,14 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
                     const sequelize = databaseCallback();
                     const model = sequelize.model(table);
 
-                    const entity = await model.findByPk(id, { include: includeablesToSequelizeInclude(sequelize, include) });
+                    const entity = await model.findByPk(id, { include: includeablesToSequelizeInclude(sequelize, model, include) });
                     if (entity == null) {
                         dispatch(updatingEntitiesFailed(table, 'get', 'Entity not found', id));
 
                         return;
                     }
 
-                    dispatchIncludedEntities(dispatch, [entity], include);
+                    dispatchIncludedEntities(model, dispatch, [entity], include);
 
                     dispatch(setEntity<T>(table, toEntity(entity)));
                 } catch (err) {
@@ -222,9 +250,9 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
                     const sequelize = databaseCallback();
                     const model = sequelize.model(table);
 
-                    const entities = await model.findAll({ where, include: includeablesToSequelizeInclude(sequelize, include) });
+                    const entities = await model.findAll({ where, include: includeablesToSequelizeInclude(sequelize, model, include) });
 
-                    dispatchIncludedEntities(dispatch, entities, include);
+                    dispatchIncludedEntities(model, dispatch, entities, include);
 
                     // convert models to entities and dispatch
                     dispatch(setEntities<T>(table, entities.map(entity => toEntity(entity))));
@@ -241,7 +269,7 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
                     const sequelize = databaseCallback();
                     const model = sequelize.model(table);
 
-                    const entity = await model.findByPk(data.id, { include: includeablesToSequelizeInclude(sequelize, include) });
+                    const entity = await model.findByPk(data.id, { include: includeablesToSequelizeInclude(sequelize, model, include) });
                     if (entity == null) {
                         dispatch(updatingEntitiesFailed(table, 'set', 'Entity not found', data));
 
@@ -258,7 +286,7 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
                     await entity.save();
 
                     // update related entities
-                    await updateAssociations(model, entity, data, include, true);
+                    await updateAssociations(sequelize, model, entity, data, include, true);
 
                     dispatch(setEntity(table, toEntity(entity)));
                 } catch (err) {

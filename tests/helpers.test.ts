@@ -163,7 +163,7 @@ describe('helper functions', () => {
     });
 
     it('valid includeables', () => {
-        expect(includeablesToSequelizeInclude(database, [
+        expect(includeablesToSequelizeInclude(database, database.model('workers'), [
             {
                 table: 'projects',
                 key: 'projects',
@@ -259,7 +259,7 @@ describe('helper functions', () => {
     });
 
     it('convert includeables', () => {
-        expect(includeablesToSequelizeInclude(database, [
+        expect(includeablesToSequelizeInclude(database, database.model('workers'),[
             {
                 key: 'department',
                 table: 'departments',

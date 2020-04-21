@@ -584,7 +584,7 @@ describe('entity actions', () => {
         await database.model('workPlaces').create(workPlace);
         expect(await database.model('workPlaces').count()).toBe(1);
 
-        let expectedActions = [
+        const expectedActions = [
             {
                 type: Events.UPDATING_ENTITIES,
                 table
@@ -615,7 +615,9 @@ describe('entity actions', () => {
         }));
         expect(store.getActions()).toEqual(expectedActions);
 
-        let result = toWorker(await database.model(table).findByPk(worker.id, { include: includeablesToSequelizeInclude(database, workerInclude) }));
+        let result = toWorker(await database.model(table).findByPk(worker.id, {
+            include: includeablesToSequelizeInclude(database, database.model(table), workerInclude)
+        }));
         expect(result.workPlace.id).toBe(workPlace.id);
 
         // Try same from other side
@@ -630,7 +632,7 @@ describe('entity actions', () => {
         await database.model('workPlaces').create(workPlace);
         expect(await database.model('workPlaces').count()).toBe(1);
 
-        expectedActions = [
+        const expectedReverseActions = [
             {
                 type: Events.UPDATING_ENTITIES,
                 table: 'workPlaces'
@@ -654,9 +656,12 @@ describe('entity actions', () => {
                 entity: null
             }
         }));
-        expect(store.getActions()).toEqual(expectedActions);
+        expect(store.getActions()).toEqual(expectedReverseActions);
 
-        result = toWorkPlace(await database.model('workPlaces').findByPk(workPlace.id, { include: includeablesToSequelizeInclude(database, workPlaceInclude) }));
+        result = await database.model('workPlaces').findByPk(workPlace.id, {
+            include: includeablesToSequelizeInclude(database, database.model('workPlaces'), workPlaceInclude)
+        });
+        console.log(result);
         expect(result.worker.id).toBe(worker.id);
     });
 
