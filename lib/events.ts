@@ -33,6 +33,7 @@ export const UPDATING_ENTITIES_FAILED = 'RS_UPDATING_ENTITIES_FAILED';
 export const SET_ENTITY = 'RS_SET_ENTITY';
 export const SET_ENTITIES = 'RS_SET_ENTITIES';
 export const DELETE_ENTITY = 'RS_DELETE_ENTITY';
+export const CLEAR_ENTITIES = 'RS_CLEAR_ENTITIES';
 
 export interface UpdatingEntitiesAction {
     type: typeof UPDATING_ENTITIES;
@@ -65,5 +66,10 @@ export interface DeleteEntityAction {
     id: number;
 }
 
+export interface ClearEntitiesAction {
+    type: typeof CLEAR_ENTITIES;
+    table: string;
+}
+
 export type EntityActions<T extends Entity> = UpdatingEntitiesAction | UpdatingEntitiesFailedAction | SetEntityAction<T> | SetEntitiesAction<T> |
-    DeleteEntityAction;
+    DeleteEntityAction | ClearEntitiesAction;

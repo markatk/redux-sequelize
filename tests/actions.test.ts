@@ -42,7 +42,8 @@ const {
     deleteEntity: deleteWorker,
     getEntities: getWorkers,
     getEntity: getWorker,
-    setEntity: setWorker
+    setEntity: setWorker,
+    clearEntities: clearWorkers
 } = createActions<Worker>(() => database, table, toWorker, workerInclude);
 
 const {
@@ -661,7 +662,6 @@ describe('entity actions', () => {
         result = await database.model('workPlaces').findByPk(workPlace.id, {
             include: includeablesToSequelizeInclude(database, database.model('workPlaces'), workPlaceInclude)
         });
-        console.log(result);
         expect(result.worker.id).toBe(worker.id);
     });
 
@@ -874,6 +874,13 @@ describe('entity actions', () => {
 
         expect(await database.model(table).count()).toBe(1);
     });
+
+    it('clear action', () => {
+        expect(clearWorkers()).toEqual({
+            type: Events.CLEAR_ENTITIES,
+            table
+        });
+    })
 });
 
 describe('internal actions', () => {

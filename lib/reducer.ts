@@ -371,6 +371,12 @@ export default function reducer<T extends Entity>(table: string) {
                     data,
                 };
 
+            case Events.CLEAR_ENTITIES:
+                return {
+                    ...state,
+                    data: {}
+                };
+
             default:
                 return state;
         }

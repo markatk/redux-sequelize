@@ -80,6 +80,13 @@ export function deleteEntity(table: string, id: number): Events.DeleteEntityActi
     };
 }
 
+export function clearEntities(table: string): Events.ClearEntitiesAction {
+    return {
+        type: Events.CLEAR_ENTITIES,
+        table
+    };
+}
+
 export function dispatchIncludedEntities<T extends Entity>(
     model: ModelCtor<Model>,
     dispatch: Dispatch<Events.EntityActions<T>>,
@@ -314,6 +321,9 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
                     dispatch(updatingEntitiesFailed(table, 'delete', err.message, id));
                 }
             };
+        },
+        clearEntities: () => {
+            return clearEntities(table);
         }
     };
 }

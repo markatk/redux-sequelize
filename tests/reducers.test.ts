@@ -29,7 +29,7 @@
 import { Reducer } from 'redux';
 
 import { reducer, Events, createRelatedEntity, createRelatedEntities } from '../lib';
-import { updateEntities, updatingEntitiesFailed, setEntity, setEntities, deleteEntity } from '../lib/actions';
+import { updateEntities, updatingEntitiesFailed, setEntity, setEntities, deleteEntity, clearEntities } from '../lib/actions';
 import { Worker } from './entities';
 
 const initialState = {
@@ -1167,5 +1167,31 @@ describe('entity reducer', () => {
 
         // Verify projects is actually a new object
         expect(worker.projects).not.toBe(originalProjects);
+    });
+
+    it('clear entities from store', () => {
+        const state = {
+            updating: 1,
+            data: {
+                [1]: {
+                    id: 1,
+                    name: 'Thomas',
+                    workId: 55,
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers')
+                }
+            },
+            relatedTables: ['workers', 'departments', 'projects']
+        };
+
+        const newState = workerReducer(state, clearEntities(table));
+
+        expect(newState).not.toBe(state);
+        expect(newState).toEqual({
+            updating: 1,
+            data: {},
+            relatedTables: ['workers', 'departments', 'projects']
+        });
     });
 });
