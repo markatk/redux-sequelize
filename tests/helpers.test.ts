@@ -32,10 +32,13 @@ import {
     includeablesToSequelizeInclude,
     createRelatedEntity,
     createRelatedEntities,
-    includeablesToEntityStore
+    isRelatedEntityEqual,
+    isRelatedEntitiesEqual,
+    entityCollectionToArray
 } from '../lib/helpers';
 import createDatabase from './database';
-import { toWorker } from './entities';
+import { toWorker, Worker } from './entities';
+import { RelatedEntity, RelatedEntities } from '../lib';
 
 const worker = {
     id: 5,
@@ -162,6 +165,96 @@ describe('helper functions', () => {
         })).toBe(false);
     });
 
+    it('compare related entity', () => {
+        const a: RelatedEntity<Worker> = {
+            table: 'workers',
+            linkedKey: 'workers',
+            id: 3,
+            entity: worker
+        };
+
+        expect(isRelatedEntityEqual(null, null)).toBeTruthy();
+        expect(isRelatedEntityEqual(a, null)).toBeFalsy();
+        expect(isRelatedEntityEqual(null, a)).toBeFalsy();
+
+        expect(isRelatedEntityEqual(a, a)).toBeTruthy();
+        expect(isRelatedEntityEqual(a, {...a})).toBeTruthy();
+        expect(isRelatedEntityEqual(a, {
+            table: 'workers',
+            linkedKey: 'workers',
+            id: 3,
+            entity: null
+        })).toBeFalsy();
+        expect(isRelatedEntityEqual(a, {
+            table: 'workers',
+            linkedKey: 'workers',
+            id: null,
+            entity: worker
+        })).toBeFalsy();
+        expect(isRelatedEntityEqual(a, {
+            table: 'workers',
+            linkedKey: 'worker',
+            id: 3,
+            entity: worker
+        })).toBeFalsy();
+        expect(isRelatedEntityEqual(a, {
+            table: 'worker',
+            linkedKey: 'workers',
+            id: 3,
+            entity: worker
+        })).toBeFalsy();
+    });
+
+    it('compare related entities', () => {
+        const a: RelatedEntities<Worker> = {
+            table: 'workers',
+            linkedKey: 'workers',
+            entities: {
+                [3]: worker
+            }
+        };
+
+        expect(isRelatedEntitiesEqual(null, null)).toBeTruthy();
+        expect(isRelatedEntitiesEqual(a, null)).toBeFalsy();
+        expect(isRelatedEntitiesEqual(null, a)).toBeFalsy();
+
+        expect(isRelatedEntitiesEqual(a, a)).toBeTruthy();
+        expect(isRelatedEntitiesEqual(a, {...a})).toBeTruthy();
+        expect(isRelatedEntitiesEqual(a, {
+            table: 'workers',
+            linkedKey: 'workers',
+            entities: {
+                [3]: null
+            }
+        })).toBeFalsy();
+        expect(isRelatedEntitiesEqual(a, {
+            table: 'workers',
+            linkedKey: 'workers',
+            entities: {
+                [2]: worker
+            }
+        })).toBeFalsy();
+        expect(isRelatedEntitiesEqual(a, {
+            table: 'workers',
+            linkedKey: 'worker',
+            entities: {
+                [3]: worker
+            }
+        })).toBeFalsy();
+        expect(isRelatedEntitiesEqual(a, {
+            table: 'worker',
+            linkedKey: 'workers',
+            entities: {
+                [3]: worker
+            }
+        })).toBeFalsy();
+        expect(isRelatedEntitiesEqual(a, {
+            table: 'worker',
+            linkedKey: 'workers',
+            entities: {}
+        })).toBeFalsy();
+    });
+
     it('valid includeables', () => {
         expect(includeablesToSequelizeInclude(database, database.model('workers'), [
             {
@@ -282,5 +375,40 @@ describe('helper functions', () => {
                 attributes: undefined
             }
         ]);
+    });
+
+    it('convert entity collections to arrays', () => {
+        const boss: Worker = {
+            id: 7,
+            name: 'Mike',
+            workId: 10
+        };
+
+        const collection: {[id: number]: Worker} = {
+            [5]: worker,
+            [7]: boss
+        };
+
+        expect(entityCollectionToArray(null)).toEqual([]);
+        expect(entityCollectionToArray({})).toEqual([]);
+        expect(entityCollectionToArray({
+            [5]: null,
+            [7]: null
+        })).toEqual([]);
+        expect(entityCollectionToArray(collection)).toEqual([
+            worker,
+            boss
+        ]);
+        expect(entityCollectionToArray(collection, null)).toEqual([
+            worker,
+            boss
+        ]);
+        expect(entityCollectionToArray(collection, entity => entity.id !== 5)).toEqual([
+            boss
+        ]);
+        expect(entityCollectionToArray(collection, (entity: Worker, index: number) => index > 0)).toEqual([
+            boss
+        ]);
+        expect(entityCollectionToArray(collection, () => false)).toEqual([]);
     });
 });

@@ -54,6 +54,41 @@ export function isRelatedEntities(value: {[key: string]: any}): boolean {
     return value[`table`] != null && value[`entities`] != null;
 }
 
+export function isRelatedEntityEqual<T extends Entity>(a: RelatedEntity<T>, b: RelatedEntity<T>): boolean {
+    if (a == null && b == null) {
+        return true;
+    }
+
+    if (a == null || b == null) {
+        return false;
+    }
+
+    return a.table === b.table && a.id === b.id && a.linkedKey === b.linkedKey && a.entity === b.entity;
+}
+
+export function isRelatedEntitiesEqual<T extends Entity>(a: RelatedEntities<T>, b: RelatedEntities<T>): boolean {
+    if (a == null && b == null) {
+        return true;
+    }
+
+    if (a == null || b == null) {
+        return false;
+    }
+
+    if (a.table !== b.table || a.linkedKey !== b.linkedKey) {
+        return false;
+    }
+
+    const keysA = Object.keys(a.entities);
+    const keysB = Object.keys(b.entities);
+
+    return keysA.length === keysB.length && keysA.some(key => {
+        const id = parseInt(key);
+
+        return a.entities[id] === b.entities[id];
+    });
+}
+
 export function includeablesToSequelizeInclude(sequelize: Sequelize, model: ModelCtor<Model>, includeables: Includeable[]): SequelizeIncludeable[] {
     return includeables
         .filter(includeable => model.associations[includeable.key] != null)
@@ -133,4 +168,18 @@ export function arrayEquals(arr1: any[], arr2: any[]): boolean {
     }
 
     return true;
+}
+
+export function entityCollectionToArray<T extends Entity>(entities: {[id: number]: T}, filter?: (entity: T, index: number) => boolean): T[] {
+    if (entities == null) {
+        return [];
+    }
+
+    return Object.keys(entities)
+        .filter((key, index) => {
+            const entity = entities[parseInt(key)];
+
+            return entity != null && (filter == null || filter(entity, index));
+        })
+        .map(key => entities[parseInt(key)]);
 }
