@@ -32,6 +32,7 @@ import { Model } from 'sequelize';
 interface WorkerModel extends Entity {
     name: string;
     workId: number;
+    version: number;
 
     projects: RelatedEntities<Project>;
     department: RelatedEntity<Department>;
@@ -46,6 +47,7 @@ export function toWorker(data: Model): Worker {
         id: data.get('id') as number,
         name: data.get('name') as string,
         workId: data.get('workId') as number,
+        version: data.get('version') as number,
 
         projects: mapRelatedEntities<Project>('projects', data.get('projects') as Project[], 'workers'),
         department: mapRelatedEntity<Department>('departments', data.get('department') as Department, 'workers'),

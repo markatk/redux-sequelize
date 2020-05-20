@@ -53,13 +53,15 @@ const {
 const worker = {
     id: 1,
     name: 'Thomas',
-    workId: 55
+    workId: 55,
+    version: 1
 };
 
 const boss = {
     id: 2,
     name: 'Steven',
-    workId: 3
+    workId: 3,
+    version: 1
 };
 
 const mockStore = configureMockStore([thunk]);
@@ -241,6 +243,7 @@ describe('entity actions', () => {
                 table,
                 entity: {
                     ...worker,
+                    version: 2,
                     name: 'Mike',
                     boss: createRelatedEntity('workers'),
                     department: createRelatedEntity('departments', 'workers'),
@@ -295,6 +298,44 @@ describe('entity actions', () => {
         expect(await database.model(table).count()).toBe(1);
     });
 
+    it('update outdated entity', async () => {
+        await database.model(table).create({
+            ...worker,
+            version: 3
+        });
+        expect(await database.model(table).count()).toBe(1);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.UPDATING_ENTITIES_FAILED,
+                table,
+                action: 'set',
+                message: 'Entity outdated',
+                data: {
+                    id: worker.id,
+                    name: 'Mike',
+                    version: 1
+                }
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(setWorker({
+            id: worker.id,
+            name: 'Mike',
+            version: 1
+        }));
+
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(1);
+    });
+
     it('get with related entity', async () => {
         const workerEntity = await database.model(table).create(worker);
         const bossEntity = await database.model(table).create(boss);
@@ -332,6 +373,7 @@ describe('entity actions', () => {
                 table,
                 entity: {
                     ...worker,
+                    version: 2,
                     boss: createRelatedEntity('workers', null, boss.id),
                     department: createRelatedEntity('departments', 'workers'),
                     projects: createRelatedEntities('projects', 'workers'),
@@ -546,6 +588,7 @@ describe('entity actions', () => {
                 table,
                 entity: {
                     ...worker,
+                    version: 2,
                     boss: createRelatedEntity('workers', null, boss.id),
                     department: createRelatedEntity('departments', 'workers'),
                     projects: createRelatedEntities('projects', 'workers'),
@@ -724,6 +767,7 @@ describe('entity actions', () => {
                 table,
                 entity: {
                     ...worker,
+                    version: 2,
                     boss: createRelatedEntity('workers', null, boss.id),
                     department: createRelatedEntity('departments', 'workers'),
                     projects: createRelatedEntities('projects', 'workers'),
@@ -857,6 +901,7 @@ describe('entity actions', () => {
                 entity: {
                     ...worker,
                     name: 'Steven',
+                    version: 2,
                     boss: createRelatedEntity('workers'),
                     department: createRelatedEntity('departments', 'workers'),
                     projects: createRelatedEntities('projects', 'workers', [projectA.get('id') as number]),

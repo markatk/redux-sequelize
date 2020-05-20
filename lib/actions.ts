@@ -283,6 +283,12 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
                         return;
                     }
 
+                    if (model.options.version && entity.get('version') as number > data.version) {
+                        dispatch(updatingEntitiesFailed(table, 'set', 'Entity outdated', data));
+
+                        return;
+                    }
+
                     // apply changes
                     for (const key in data) {
                         if (data.hasOwnProperty(key) && include.some(includeable => includeable.key === key) === false) {

@@ -91,7 +91,8 @@ export default function createDatabase(): Sequelize {
         workId: DataTypes.NUMBER
     }, {
         sequelize,
-        modelName: 'workers'
+        modelName: 'workers',
+        version: true
     });
 
     WorkPlace.init({
