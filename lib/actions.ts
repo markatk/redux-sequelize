@@ -343,6 +343,62 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
         },
         clearEntities: () => {
             return clearEntities(options.table);
+        },
+        createOrSetEntity: (data: T) => {
+            return async (dispatch: Dispatch<Events.EntityActions<T>>) => {
+                dispatch(updateEntities(options.table));
+
+                try {
+                    const sequelize = databaseCallback();
+                    const model = sequelize.model(options.table);
+
+                    const entityData = options.fromEntity != null ? options.fromEntity(data) : data;
+                    let entity: Model | null;
+                    let created = false;
+
+                    if (data.id == null) {
+                        // create new entity
+                        entity = await model.create(entityData);
+                        entity = await model.findByPk(entity.get('id') as number, { include: includeablesToSequelizeInclude(sequelize, model, options.include) }) as Model;
+
+                        created = true;
+                    } else {
+                        // try to get entity
+                        entity = await model.findByPk(data.id, { include: includeablesToSequelizeInclude(sequelize, model, options.include) });
+                        if (entity == null) {
+                            // create entity because none was found for the id
+                            entity = await model.create(entityData);
+                            entity = await model.findByPk(entity.get('id') as number, { include: includeablesToSequelizeInclude(sequelize, model, options.include) }) as Model;
+
+                            created = true;
+                        } else if (model.options.version && entity.get('version') as number > data.version) {
+                            dispatch(updatingEntitiesFailed(options.table, 'set', 'Entity outdated', data));
+
+                            return;
+                        }
+                    }
+
+                    if (created === false) {
+                        // apply changes
+                        if (options.include != null) {
+                            for (const key in entityData) {
+                                if (entityData.hasOwnProperty(key) && options.include!.some(includeable => includeable.key === key) === false) {
+                                    entity.set(key as any, entityData[key]);
+                                }
+                            }
+                        }
+
+                        await entity.save();
+                    }
+
+                    // update related entities
+                    await updateAssociations(sequelize, model, entity, data, options.include, true);
+
+                    dispatch(setEntity(options.table, options.toEntity(entity)));
+                } catch (err) {
+                    dispatch(updatingEntitiesFailed(options.table, 'set', err.message, data));
+                }
+            };
         }
     };
 }

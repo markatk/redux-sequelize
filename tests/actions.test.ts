@@ -43,7 +43,8 @@ const {
     getEntities: getWorkers,
     getEntity: getWorker,
     setEntity: setWorker,
-    clearEntities: clearWorkers
+    clearEntities: clearWorkers,
+    createOrSetEntity: createOrSetWorker
 } = createActions<Worker>(() => database, {
     table,
     toEntity: toWorker,
@@ -1013,7 +1014,137 @@ describe('entity actions', () => {
             type: Events.CLEAR_ENTITIES,
             table
         });
-    })
+    });
+
+    it('create or set new valid entity', async () => {
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.SET_ENTITY,
+                table,
+                entity: {
+                    ...worker,
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers'),
+                    workPlace: createRelatedEntity('workPlaces', 'worker')
+                }
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(createOrSetWorker(worker));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(1);
+    });
+
+    it('create or set new valid entity without id', async () => {
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.SET_ENTITY,
+                table,
+                entity: {
+                    id: 3,
+                    name: 'Thomas',
+                    workId: 6,
+                    version: 0,
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers'),
+                    workPlace: createRelatedEntity('workPlaces', 'worker')
+                }
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(createOrSetWorker({
+            name: 'Thomas',
+            workId: 6
+        }));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(1);
+    });
+
+    it('create or set existing valid entity', async () => {
+        await database.model(table).create(worker);
+        expect(await database.model(table).count()).toBe(1);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.SET_ENTITY,
+                table,
+                entity: {
+                    ...worker,
+                    name: 'Thomas',
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers'),
+                    workPlace: createRelatedEntity('workPlaces', 'worker')
+                }
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(createOrSetWorker({
+            ...worker,
+            name: 'Thomas'
+        }));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(1);
+    });
+
+    it('create or set existing valid entity without id', async () => {
+        await database.model(table).create(worker);
+        expect(await database.model(table).count()).toBe(1);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table
+            },
+            {
+                type: Events.SET_ENTITY,
+                table,
+                entity: {
+                    ...worker,
+                    id: 4,
+                    name: 'Thomas',
+                    boss: createRelatedEntity('workers'),
+                    department: createRelatedEntity('departments', 'workers'),
+                    projects: createRelatedEntities('projects', 'workers'),
+                    workPlace: createRelatedEntity('workPlaces', 'worker')
+                }
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(createOrSetWorker({
+            ...worker,
+            id: undefined,
+            name: 'Thomas'
+        }));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model(table).count()).toBe(2);
+    });
 });
 
 describe('internal actions', () => {
