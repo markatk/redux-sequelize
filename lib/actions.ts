@@ -221,7 +221,9 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
                     const model = sequelize.model(options.table);
 
                     // create entity and search for it to include related objects
-                    let entity = await model.create(data);
+                    const entityData = options.fromEntity != null ? options.fromEntity(data) : data;
+
+                    let entity = await model.create(entityData);
                     entity = await model.findByPk(entity.get('id') as number, { include: includeablesToSequelizeInclude(sequelize, model, options.include) }) as Model;
 
                     // set related entities
@@ -297,10 +299,12 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
                     }
 
                     // apply changes
+                    const entityData = options.fromEntity != null ? options.fromEntity(data) : data;
+
                     if (options.include != null) {
-                        for (const key in data) {
-                            if (data.hasOwnProperty(key) && options.include!.some(includeable => includeable.key === key) === false) {
-                                entity.set(key as any, data[key]);
+                        for (const key in entityData) {
+                            if (entityData.hasOwnProperty(key) && options.include!.some(includeable => includeable.key === key) === false) {
+                                entity.set(key as any, entityData[key]);
                             }
                         }
                     }

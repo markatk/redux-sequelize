@@ -31,7 +31,7 @@ import thunk from 'redux-thunk';
 
 import { createActions, Events, createRelatedEntity, createRelatedEntities } from '../lib';
 import { updateEntities, updatingEntitiesFailed, setEntity, setEntities, deleteEntity } from '../lib/actions';
-import { Worker, toWorker, workerInclude, workPlaceInclude, toWorkPlace, WorkPlace, Config, toConfig } from './entities';
+import { Worker, toWorker, workerInclude, workPlaceInclude, toWorkPlace, WorkPlace, Config, toConfig, fromConfig } from './entities';
 import createDatabase from './database';
 
 const table = 'workers';
@@ -63,7 +63,8 @@ const {
     createEntity: createConfig
 } = createActions<Config>(() => database, {
     table: 'configs',
-    toEntity: toConfig
+    toEntity: toConfig,
+    fromEntity: fromConfig
 });
 
 const worker = {

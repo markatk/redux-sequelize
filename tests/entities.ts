@@ -146,3 +146,11 @@ export function toConfig(data: Model): Config {
         data: JSON.parse(data.get('data') as string)
     };
 }
+
+export function fromConfig(data: Config): {[key: string]: any} {
+    return {
+        id: data.id,
+        semVer: data.semVer,
+        data: JSON.stringify(data.data)
+    };
+}
