@@ -31,7 +31,7 @@ import { Sequelize, WhereOptions, Model, ModelCtor } from 'sequelize';
 import _ from 'lodash';
 
 import * as Events from './events';
-import { Entity, Includeable, ToEntity } from './types';
+import { Entity, Includeable, ToEntity, FromEntity } from './types';
 import { includeablesToSequelizeInclude, includeablesToEntityStore, arrayEquals, isRelatedEntity } from './helpers';
 
 export function updateEntities(table: string): Events.UpdatingEntitiesAction {
@@ -91,7 +91,7 @@ export function dispatchIncludedEntities<T extends Entity>(
     model: ModelCtor<Model>,
     dispatch: Dispatch<Events.EntityActions<T>>,
     entities: Model[],
-    includeables: Includeable[]
+    includeables: Includeable[] = []
 ): {[table: string]: Entity[]} {
     const data = includeablesToEntityStore(model, includeables);
 
@@ -135,7 +135,7 @@ async function updateAssociations<T extends Entity>(
     model: ModelCtor<Model>,
     entity: Model,
     data: T,
-    include: Includeable[],
+    include: Includeable[] = [],
     checkCurrent: boolean = false
 ) {
     for (const includeable of include) {
@@ -203,133 +203,142 @@ async function updateAssociations<T extends Entity>(
     }
 }
 
-export function createActions<T extends Entity>(databaseCallback: () => Sequelize, table: string, toEntity: ToEntity<T>, include: Includeable[] = []) {
+interface ActionOptions<T extends Entity> {
+    table: string,
+    toEntity: ToEntity<T>,
+    fromEntity?: FromEntity<T>,
+    include?: Includeable[]
+}
+
+export function createActions<T extends Entity>(databaseCallback: () => Sequelize, options: ActionOptions<T>) {
     return {
         createEntity: (data: T) => {
             return async (dispatch: Dispatch<Events.EntityActions<T>>) => {
-                dispatch(updateEntities(table));
+                dispatch(updateEntities(options.table));
 
                 try {
                     const sequelize = databaseCallback();
-                    const model = sequelize.model(table);
+                    const model = sequelize.model(options.table);
 
                     // create entity and search for it to include related objects
                     let entity = await model.create(data);
-                    entity = await model.findByPk(entity.get('id') as number, { include: includeablesToSequelizeInclude(sequelize, model, include) }) as Model;
+                    entity = await model.findByPk(entity.get('id') as number, { include: includeablesToSequelizeInclude(sequelize, model, options.include) }) as Model;
 
                     // set related entities
-                    await updateAssociations(sequelize, model, entity, data, include);
+                    await updateAssociations(sequelize, model, entity, data, options.include);
 
-                    dispatch(setEntity<T>(table, toEntity(entity)));
+                    dispatch(setEntity<T>(options.table, options.toEntity(entity)));
                 } catch (err) {
-                    dispatch(updatingEntitiesFailed(table, 'create', err.message, data));
+                    dispatch(updatingEntitiesFailed(options.table, 'create', err.message, data));
                 }
             };
         },
         getEntity: (id: number) => {
             return async (dispatch: Dispatch<Events.EntityActions<T>>) => {
-                dispatch(updateEntities(table));
+                dispatch(updateEntities(options.table));
 
                 try {
                     const sequelize = databaseCallback();
-                    const model = sequelize.model(table);
+                    const model = sequelize.model(options.table);
 
-                    const entity = await model.findByPk(id, { include: includeablesToSequelizeInclude(sequelize, model, include) });
+                    const entity = await model.findByPk(id, { include: includeablesToSequelizeInclude(sequelize, model, options.include) });
                     if (entity == null) {
-                        dispatch(updatingEntitiesFailed(table, 'get', 'Entity not found', id));
+                        dispatch(updatingEntitiesFailed(options.table, 'get', 'Entity not found', id));
 
                         return;
                     }
 
-                    dispatchIncludedEntities(model, dispatch, [entity], include);
+                    dispatchIncludedEntities(model, dispatch, [entity], options.include);
 
-                    dispatch(setEntity<T>(table, toEntity(entity)));
+                    dispatch(setEntity<T>(options.table, options.toEntity(entity)));
                 } catch (err) {
-                    dispatch(updatingEntitiesFailed(table, 'get', err.message, id));
+                    dispatch(updatingEntitiesFailed(options.table, 'get', err.message, id));
                 }
             }
         },
         getEntities: (where: WhereOptions = {}) => {
             return async (dispatch: Dispatch<Events.EntityActions<T>>) => {
-                dispatch(updateEntities(table));
+                dispatch(updateEntities(options.table));
 
                 try {
                     const sequelize = databaseCallback();
-                    const model = sequelize.model(table);
+                    const model = sequelize.model(options.table);
 
-                    const entities = await model.findAll({ where, include: includeablesToSequelizeInclude(sequelize, model, include) });
+                    const entities = await model.findAll({ where, include: includeablesToSequelizeInclude(sequelize, model, options.include) });
 
-                    dispatchIncludedEntities(model, dispatch, entities, include);
+                    dispatchIncludedEntities(model, dispatch, entities, options.include);
 
                     // convert models to entities and dispatch
-                    dispatch(setEntities<T>(table, entities.map(entity => toEntity(entity))));
+                    dispatch(setEntities<T>(options.table, entities.map(entity => options.toEntity(entity))));
                 } catch (err) {
-                    dispatch(updatingEntitiesFailed(table, 'get', err.message, where));
+                    dispatch(updatingEntitiesFailed(options.table, 'get', err.message, where));
                 }
             }
         },
         setEntity: (data: T) => {
             return async (dispatch: Dispatch<Events.EntityActions<T>>) => {
-                dispatch(updateEntities(table));
+                dispatch(updateEntities(options.table));
 
                 try {
                     const sequelize = databaseCallback();
-                    const model = sequelize.model(table);
+                    const model = sequelize.model(options.table);
 
-                    const entity = await model.findByPk(data.id, { include: includeablesToSequelizeInclude(sequelize, model, include) });
+                    const entity = await model.findByPk(data.id, { include: includeablesToSequelizeInclude(sequelize, model, options.include) });
                     if (entity == null) {
-                        dispatch(updatingEntitiesFailed(table, 'set', 'Entity not found', data));
+                        dispatch(updatingEntitiesFailed(options.table, 'set', 'Entity not found', data));
 
                         return;
                     }
 
                     if (model.options.version && entity.get('version') as number > data.version) {
-                        dispatch(updatingEntitiesFailed(table, 'set', 'Entity outdated', data));
+                        dispatch(updatingEntitiesFailed(options.table, 'set', 'Entity outdated', data));
 
                         return;
                     }
 
                     // apply changes
-                    for (const key in data) {
-                        if (data.hasOwnProperty(key) && include.some(includeable => includeable.key === key) === false) {
-                            entity.set(key as any, data[key]);
+                    if (options.include != null) {
+                        for (const key in data) {
+                            if (data.hasOwnProperty(key) && options.include!.some(includeable => includeable.key === key) === false) {
+                                entity.set(key as any, data[key]);
+                            }
                         }
                     }
 
                     await entity.save();
 
                     // update related entities
-                    await updateAssociations(sequelize, model, entity, data, include, true);
+                    await updateAssociations(sequelize, model, entity, data, options.include, true);
 
-                    dispatch(setEntity(table, toEntity(entity)));
+                    dispatch(setEntity(options.table, options.toEntity(entity)));
                 } catch (err) {
-                    dispatch(updatingEntitiesFailed(table, 'set', err.message, data));
+                    dispatch(updatingEntitiesFailed(options.table, 'set', err.message, data));
                 }
             };
         },
         deleteEntity: (id: number) => {
             return async (dispatch: Dispatch<Events.EntityActions<T>>) => {
-                dispatch(updateEntities(table));
+                dispatch(updateEntities(options.table));
 
                 try {
                     const sequelize = databaseCallback();
-                    const model = sequelize.model(table);
+                    const model = sequelize.model(options.table);
 
                     const count = await model.destroy({ where: { id }});
                     if (count === 0) {
-                        dispatch(updatingEntitiesFailed(table, 'delete', 'Entity not found', id));
+                        dispatch(updatingEntitiesFailed(options.table, 'delete', 'Entity not found', id));
 
                         return;
                     }
 
-                    dispatch(deleteEntity(table, id));
+                    dispatch(deleteEntity(options.table, id));
                 } catch (err) {
-                    dispatch(updatingEntitiesFailed(table, 'delete', err.message, id));
+                    dispatch(updatingEntitiesFailed(options.table, 'delete', err.message, id));
                 }
             };
         },
         clearEntities: () => {
-            return clearEntities(table);
+            return clearEntities(options.table);
         }
     };
 }

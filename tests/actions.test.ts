@@ -29,9 +29,9 @@
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 
-import { createActions, Events, createRelatedEntity, createRelatedEntities, includeablesToSequelizeInclude } from '../lib';
+import { createActions, Events, createRelatedEntity, createRelatedEntities } from '../lib';
 import { updateEntities, updatingEntitiesFailed, setEntity, setEntities, deleteEntity } from '../lib/actions';
-import { Worker, toWorker, workerInclude, workPlaceInclude, toWorkPlace, WorkPlace } from './entities';
+import { Worker, toWorker, workerInclude, workPlaceInclude, toWorkPlace, WorkPlace, Config, toConfig } from './entities';
 import createDatabase from './database';
 
 const table = 'workers';
@@ -44,11 +44,27 @@ const {
     getEntity: getWorker,
     setEntity: setWorker,
     clearEntities: clearWorkers
-} = createActions<Worker>(() => database, table, toWorker, workerInclude);
+} = createActions<Worker>(() => database, {
+    table,
+    toEntity: toWorker,
+    include: workerInclude
+});
 
 const {
     setEntity: setWorkPlace
-} = createActions<WorkPlace>(() => database, 'workPlaces', toWorkPlace, workPlaceInclude);
+} = createActions<WorkPlace>(() => database, {
+    table: 'workPlaces',
+    toEntity: toWorkPlace,
+    include: workPlaceInclude
+});
+
+const {
+    getEntity: getConfig,
+    createEntity: createConfig
+} = createActions<Config>(() => database, {
+    table: 'configs',
+    toEntity: toConfig
+});
 
 const worker = {
     id: 1,
@@ -103,7 +119,11 @@ describe('entity actions', () => {
         ];
 
         const store = mockStore();
-        const { createEntity } = createActions<Worker>(null, 'workers', toWorker, workerInclude);
+        const { createEntity } = createActions<Worker>(null, {
+            table: 'workers',
+            toEntity: toWorker,
+            include: workerInclude
+        });
 
         await store.dispatch(createEntity(worker));
         expect(store.getActions()).toEqual(expectedActions);
@@ -152,7 +172,10 @@ describe('entity actions', () => {
         ];
 
         const store = mockStore();
-        const { createEntity: createTest } = createActions<Worker>(() => database, 'test', toWorker);
+        const { createEntity: createTest } = createActions<Worker>(() => database, {
+            table: 'test',
+            toEntity: toWorker
+        });
 
         await store.dispatch(createTest(worker));
         expect(store.getActions()).toEqual(expectedActions);
@@ -919,6 +942,69 @@ describe('entity actions', () => {
         expect(store.getActions()).toEqual(expectedActions);
 
         expect(await database.model(table).count()).toBe(1);
+    });
+
+    it('get entity with json field', async () => {
+        const configData = {
+            boo: 'foo',
+            bee: 2
+        };
+
+        const config = await database.model('configs').create({ semVer: '1.0', data: JSON.stringify(configData) });
+        expect(await database.model('configs').count()).toBe(1);
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table: 'configs'
+            },
+            {
+                type: Events.SET_ENTITY,
+                table: 'configs',
+                entity: {
+                    id: config.get('id') as number,
+                    semVer: '1.0',
+                    data: configData
+                }
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(getConfig(config.get('id') as number));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model('configs').count()).toBe(1);
+    });
+
+    it('create entity with json field', async () => {
+        const configData = {
+            boo: 'foo',
+            bee: 2
+        };
+
+        const expectedActions = [
+            {
+                type: Events.UPDATING_ENTITIES,
+                table: 'configs'
+            },
+            {
+                type: Events.SET_ENTITY,
+                table: 'configs',
+                entity: {
+                    id: 1,
+                    semVer: '1.0',
+                    data: configData
+                }
+            }
+        ];
+
+        const store = mockStore();
+
+        await store.dispatch(createConfig({ id: 1, semVer: '1.0', data: configData }));
+        expect(store.getActions()).toEqual(expectedActions);
+
+        expect(await database.model('configs').count()).toBe(1);
     });
 
     it('clear action', () => {

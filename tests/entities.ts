@@ -29,6 +29,7 @@
 import { Entity, RelatedEntity, RelatedEntities, mapRelatedEntities, mapRelatedEntity, Includeable } from '../lib';
 import { Model } from 'sequelize';
 
+// Worker
 interface WorkerModel extends Entity {
     name: string;
     workId: number;
@@ -63,6 +64,7 @@ export const workerInclude: Includeable[] = [
     { table: 'workPlaces', key: 'workPlace', linkedKey: 'worker', toEntity: toWorkPlace }
 ];
 
+// Work place
 interface WorkPlaceModel extends Entity {
     name: string;
 
@@ -83,6 +85,7 @@ export const workPlaceInclude: Includeable[] = [
     { table: 'workers', key: 'worker', linkedKey: 'workPlace' }
 ];
 
+// Project
 interface ProjectModel extends Entity {
     name: string;
 
@@ -104,6 +107,7 @@ export const projectInclude: Includeable[] = [
     { table: 'workers', key: 'workers', linkedKey: 'projects' }
 ];
 
+// Department
 interface DepartmentModel extends Entity {
     name: string;
     floor: number;
@@ -126,3 +130,19 @@ export function toDepartment(data: Model): Department {
 export const departmentInclude: Includeable[] = [
     { table: 'workers', key: 'workers', linkedKey: 'department' }
 ];
+
+// Config
+interface ConfigModel extends Entity {
+    semVer: string;
+    data: object;
+}
+
+export type Config = Partial<ConfigModel>;
+
+export function toConfig(data: Model): Config {
+    return {
+        id: data.get('id') as number,
+        semVer: data.get('semVer') as string,
+        data: JSON.parse(data.get('data') as string)
+    };
+}

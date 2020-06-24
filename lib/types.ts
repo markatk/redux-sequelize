@@ -34,6 +34,7 @@ export interface Entity {
 }
 
 export type ToEntity<T extends Entity> = (data: Model) => T;
+export type FromEntity<T extends Entity> = (entity: T) => Model;
 
 export interface Includeable {
     table: string;

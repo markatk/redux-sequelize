@@ -80,6 +80,12 @@ class Department extends Model {
     }
 }
 
+class Config extends Model {
+    public id: number;
+    public semVer: string;
+    public data: string;
+}
+
 export default function createDatabase(): Sequelize {
     const sequelize = new Sequelize({
         logging: false,
@@ -115,6 +121,14 @@ export default function createDatabase(): Sequelize {
     }, {
         sequelize,
         modelName: 'departments'
+    });
+
+    Config.init({
+        semVer: DataTypes.STRING,
+        data: DataTypes.TEXT
+    }, {
+        sequelize,
+        modelName: 'configs'
     });
 
     Worker.belongsToMany(Project, { as: 'projects', through: 'WorkerProject', foreignKey: 'workerId' });

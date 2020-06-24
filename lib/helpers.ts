@@ -89,7 +89,11 @@ export function isRelatedEntitiesEqual<T extends Entity>(a: RelatedEntities<T>, 
     });
 }
 
-export function includeablesToSequelizeInclude(sequelize: Sequelize, model: ModelCtor<Model>, includeables: Includeable[]): SequelizeIncludeable[] {
+export function includeablesToSequelizeInclude(sequelize: Sequelize, model: ModelCtor<Model>, includeables?: Includeable[]): SequelizeIncludeable[] | undefined {
+    if (includeables == null) {
+        return undefined;
+    }
+
     return includeables
         .filter(includeable => model.associations[includeable.key] != null)
         .map(includeable => ({
