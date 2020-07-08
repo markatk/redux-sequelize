@@ -230,6 +230,9 @@ export function createActions<T extends Entity>(databaseCallback: () => Sequeliz
                     await updateAssociations(sequelize, model, entity, data, options.include);
 
                     dispatch(setEntity<T>(options.table, options.toEntity(entity)));
+
+                    // set id on original data for chained actions
+                    data.id = entity.get('id') as number;
                 } catch (err) {
                     dispatch(updatingEntitiesFailed(options.table, 'create', err.message, data));
                 }
